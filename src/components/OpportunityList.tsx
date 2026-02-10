@@ -3,9 +3,10 @@ import { useOpportunities } from "@/contexts/OpportunityContext";
 import { STATUS_CONFIG, OpportunityStatus, Opportunity } from "@/types/opportunity";
 import { OpportunityDialog } from "@/components/OpportunityDialog";
 import { OpportunityDetail } from "@/components/OpportunityDetail";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function OpportunityList() {
   const { opportunities, deleteOpportunity } = useOpportunities();
@@ -29,7 +30,15 @@ export function OpportunityList() {
   };
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+  const statusColors: Record<OpportunityStatus, string> = {
+    wishlist: "bg-info",
+    applied: "bg-warning",
+    interview: "bg-primary",
+    selected: "bg-success",
+    rejected: "bg-destructive",
+  };
 
   return (
     <div className="space-y-4">
@@ -40,32 +49,30 @@ export function OpportunityList() {
             placeholder="Search companies or roles..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-secondary/50 border-border/50 focus:border-primary/50"
           />
         </div>
         <div className="flex gap-2 items-center flex-wrap">
           <div className="flex gap-1 flex-wrap">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                statusFilter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-              }`}
-            >
-              All
-            </button>
-            {(Object.keys(STATUS_CONFIG) as OpportunityStatus[]).map((s) => (
+            {(["all", ...Object.keys(STATUS_CONFIG)] as ("all" | OpportunityStatus)[]).map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  statusFilter === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  statusFilter === s
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
-                {STATUS_CONFIG[s].label}
+                {s === "all" ? "All" : STATUS_CONFIG[s].label}
               </button>
             ))}
           </div>
-          <Button onClick={() => { setEditingOpp(null); setDialogOpen(true); }} size="sm">
+          <Button
+            onClick={() => { setEditingOpp(null); setDialogOpen(true); }}
+            size="sm"
+            className="bg-gradient-to-r from-primary to-info text-primary-foreground border-0 hover:opacity-90 glow-primary"
+          >
             <Plus className="h-4 w-4 mr-1" />
             Add
           </Button>
@@ -73,67 +80,75 @@ export function OpportunityList() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="glass-card rounded-lg p-12 text-center animate-fade-in">
-          <p className="text-muted-foreground">No opportunities found.</p>
-          <Button variant="outline" className="mt-4" onClick={() => { setEditingOpp(null); setDialogOpen(true); }}>
+        <div className="glass-card rounded-xl p-16 text-center">
+          <p className="text-muted-foreground mb-4">No opportunities found.</p>
+          <Button
+            variant="outline"
+            onClick={() => { setEditingOpp(null); setDialogOpen(true); }}
+            className="border-primary/30 hover:bg-primary/5"
+          >
             <Plus className="h-4 w-4 mr-1" /> Add your first opportunity
           </Button>
         </div>
       ) : (
         <div className="grid gap-3">
-          {filtered.map((opp, i) => {
-            const config = STATUS_CONFIG[opp.status];
-            const isPast = new Date(opp.deadline) < new Date() && opp.status !== "selected" && opp.status !== "rejected";
-            return (
-              <div
-                key={opp.id}
-                className="glass-card rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow animate-fade-in"
-                style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
-                onClick={() => setViewingOpp(opp)}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-sm truncate">{opp.company}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${config.bg} ${config.color}`}>
-                        {config.label}
+          <AnimatePresence>
+            {filtered.map((opp, i) => {
+              const config = STATUS_CONFIG[opp.status];
+              const isPast = new Date(opp.deadline) < new Date() && opp.status !== "selected" && opp.status !== "rejected";
+              return (
+                <motion.div
+                  key={opp.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="glass-card-hover rounded-xl p-5 cursor-pointer group"
+                  onClick={() => setViewingOpp(opp)}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className={`h-3 w-3 rounded-full ${statusColors[opp.status]} flex-shrink-0 ring-4 ring-secondary/50`} />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-display font-semibold text-sm truncate group-hover:text-primary transition-colors">{opp.company}</h3>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${config.bg} ${config.color} font-medium`}>
+                            {config.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{opp.role}</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 space-y-1">
+                      <p className={`text-xs font-medium ${isPast ? "text-destructive" : "text-muted-foreground"}`}>
+                        {isPast ? "⚠ Overdue" : formatDate(opp.deadline)}
+                      </p>
+                      {opp.package && <p className="text-xs text-primary font-medium">{opp.package}</p>}
+                    </div>
+                  </div>
+                  {opp.checklist.length > 0 && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary to-info transition-all"
+                          style={{
+                            width: `${(opp.checklist.filter((c) => c.done).length / opp.checklist.length) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {opp.checklist.filter((c) => c.done).length}/{opp.checklist.length}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{opp.role}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className={`text-xs ${isPast ? "text-destructive" : "text-muted-foreground"}`}>
-                      {isPast ? "Overdue" : formatDate(opp.deadline)}
-                    </p>
-                    {opp.package && <p className="text-xs text-muted-foreground">{opp.package}</p>}
-                  </div>
-                </div>
-                {opp.checklist.length > 0 && (
-                  <div className="mt-2 flex items-center gap-1.5">
-                    <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{
-                          width: `${(opp.checklist.filter((c) => c.done).length / opp.checklist.length) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {opp.checklist.filter((c) => c.done).length}/{opp.checklist.length}
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       )}
 
-      <OpportunityDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        opportunity={editingOpp}
-      />
+      <OpportunityDialog open={dialogOpen} onOpenChange={setDialogOpen} opportunity={editingOpp} />
 
       {viewingOpp && (
         <OpportunityDetail

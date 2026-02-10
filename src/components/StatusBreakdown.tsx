@@ -1,5 +1,6 @@
 import { useOpportunities } from "@/contexts/OpportunityContext";
 import { STATUS_CONFIG, OpportunityStatus } from "@/types/opportunity";
+import { PieChart } from "lucide-react";
 
 export function StatusBreakdown() {
   const { opportunities } = useOpportunities();
@@ -12,24 +13,54 @@ export function StatusBreakdown() {
 
   const total = opportunities.length || 1;
 
+  const statusColors: Record<OpportunityStatus, string> = {
+    wishlist: "bg-info",
+    applied: "bg-warning",
+    interview: "bg-primary",
+    selected: "bg-success",
+    rejected: "bg-destructive",
+  };
+
   return (
-    <div className="glass-card rounded-lg p-5 animate-fade-in" style={{ animationDelay: "400ms", animationFillMode: "both" }}>
-      <h2 className="font-semibold mb-4">Status Overview</h2>
-      <div className="space-y-3">
-        {counts.map((c) => (
-          <div key={c.status}>
-            <div className="flex justify-between text-sm mb-1">
-              <span className={c.color}>{c.label}</span>
-              <span className="text-muted-foreground">{c.count}</span>
-            </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden">
+    <div className="glass-card rounded-xl p-5 relative overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-[60px]" />
+      <div className="relative">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+            <PieChart className="h-4 w-4 text-accent" />
+          </div>
+          <h2 className="font-display font-semibold">Status Overview</h2>
+        </div>
+
+        {/* Visual bar */}
+        <div className="flex h-3 rounded-full overflow-hidden mb-5 bg-secondary">
+          {counts.map((c) => (
+            c.count > 0 && (
               <div
-                className={`h-full rounded-full transition-all duration-500 ${c.bg.replace("/10", "")}`}
+                key={c.status}
+                className={`${statusColors[c.status]} transition-all duration-700 first:rounded-l-full last:rounded-r-full`}
                 style={{ width: `${(c.count / total) * 100}%` }}
               />
+            )
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          {counts.map((c) => (
+            <div key={c.status} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`h-3 w-3 rounded-full ${statusColors[c.status]}`} />
+                <span className="text-sm">{c.label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold">{c.count}</span>
+                <span className="text-xs text-muted-foreground w-10 text-right">
+                  {Math.round((c.count / total) * 100)}%
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
