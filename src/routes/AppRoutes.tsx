@@ -12,6 +12,7 @@ const LandingPage = lazy(() => import("@/features/landing/pages/LandingPage"));
 const AuthPage = lazy(() => import("@/features/auth/pages/AuthPage"));
 const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
+const ExplorePage = lazy(() => import("@/features/explore/pages/ExplorePage"));
 const PipelinePage = lazy(() => import("@/features/opportunities/pages/PipelinePage"));
 const AnalyticsPage = lazy(() => import("@/features/analytics/pages/AnalyticsPage"));
 const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage"));
@@ -47,6 +48,7 @@ export function AppRoutes() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
           <Route path="/pipeline" element={<PipelinePage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/calendar" element={<CalendarPage />} />

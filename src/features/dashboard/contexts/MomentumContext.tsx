@@ -6,6 +6,7 @@ interface MomentumContextType {
     state: MomentumState | null;
     addGoal: (text: string) => void;
     toggleGoal: (id: string) => void;
+    deleteGoal: (id: string) => void;
     completeChallenge: () => void;
     refreshState: () => void;
 }
@@ -54,6 +55,13 @@ export function MomentumProvider({ children }: { children: ReactNode }) {
         setState(newState);
     }, [state]);
 
+    const deleteGoal = useCallback((id: string) => {
+        if (!state) return;
+        const newState = momentumService.deleteGoal(state, id);
+        momentumService.saveState(newState);
+        setState(newState);
+    }, [state]);
+
     const completeChallenge = useCallback(() => {
         if (!state) return;
         const newState = momentumService.completeChallenge(state);
@@ -61,7 +69,7 @@ export function MomentumProvider({ children }: { children: ReactNode }) {
     }, [state]);
 
     return (
-        <MomentumContext.Provider value={{ state, addGoal, toggleGoal, completeChallenge, refreshState }}>
+        <MomentumContext.Provider value={{ state, addGoal, toggleGoal, deleteGoal, completeChallenge, refreshState }}>
             {children}
         </MomentumContext.Provider>
     );

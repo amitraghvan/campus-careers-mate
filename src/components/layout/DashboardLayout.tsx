@@ -20,6 +20,7 @@ import {
     Menu,
     X,
     Mail,
+    Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/hooks";
@@ -30,6 +31,7 @@ import { MomentumProvider } from "@/features/dashboard/contexts/MomentumContext"
 
 const NAV_ITEMS = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/explore", icon: Globe, label: "Explore" },
     { to: "/pipeline", icon: Mail, label: "Cold Email" },
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },

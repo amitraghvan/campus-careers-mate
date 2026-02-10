@@ -129,6 +129,11 @@ export const momentumService = {
         return [...currentGoals, newGoal];
     },
 
+    deleteGoal(state: MomentumState, goalId: string): MomentumState {
+        const newGoals = state.goals.filter(g => g.id !== goalId);
+        return { ...state, goals: newGoals };
+    },
+
     completeGoal(state: MomentumState, goalId: string): MomentumState {
         const newGoals = state.goals.map(g =>
             g.id === goalId ? { ...g, completed: !g.completed, completedAt: new Date().toISOString() } : g

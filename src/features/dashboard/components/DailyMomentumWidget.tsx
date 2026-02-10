@@ -3,12 +3,12 @@ import { useMomentum } from "@/features/dashboard/contexts/MomentumContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Circle, Flame, Plus, Trophy, Zap, Shield } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Plus, Trophy, Zap, Shield, X, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function DailyMomentumWidget() {
-    const { state, addGoal, toggleGoal, completeChallenge } = useMomentum();
+    const { state, addGoal, toggleGoal, deleteGoal, completeChallenge } = useMomentum();
     const [newGoalText, setNewGoalText] = useState("");
     const [isAdding, setIsAdding] = useState(false);
 
@@ -105,6 +105,17 @@ export function DailyMomentumWidget() {
                                     {goal.isRollover && !goal.completed && (
                                         <span className="text-[10px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">Rollover</span>
                                     )}
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteGoal(goal.id);
+                                        }}
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </Button>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
