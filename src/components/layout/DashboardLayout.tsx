@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
@@ -202,6 +203,9 @@ export default function DashboardLayout() {
                     <Outlet />
                 </div>
             </main>
+
+            {/* AI Chat Widget */}
+            <AIChatWidget />
         </div>
     );
 }
