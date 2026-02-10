@@ -4,19 +4,26 @@
  */
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, Sparkles } from "lucide-react";
 import { SignInForm, SignUpForm, SocialDivider } from "@/features/auth/components";
+import { useAuth } from "@/features/auth/hooks";
 import { APP_CONFIG } from "@/config";
 import type { AuthMode } from "@/features/auth/types";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>("sign-in");
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // If already logged in, redirect to dashboard
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to={APP_CONFIG.routes.dashboard} replace />;
+  }
 
   const handleSuccess = () => {
-    navigate(APP_CONFIG.routes.dashboard);
+    navigate(APP_CONFIG.routes.dashboard, { replace: true });
   };
 
   return (
@@ -61,21 +68,19 @@ export default function AuthPage() {
           <div className="flex rounded-xl bg-secondary/50 p-1 mb-6">
             <button
               onClick={() => setMode("sign-in")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "sign-in"
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "sign-in"
                   ? "bg-background text-foreground shadow-md"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               Sign In
             </button>
             <button
               onClick={() => setMode("sign-up")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "sign-up"
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "sign-up"
                   ? "bg-background text-foreground shadow-md"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               Sign Up
             </button>
