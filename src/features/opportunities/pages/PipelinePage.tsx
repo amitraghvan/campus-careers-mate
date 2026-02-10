@@ -60,8 +60,8 @@ export default function PipelinePage() {
         <div className="h-[calc(100vh-100px)] flex flex-col">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-display font-bold tracking-tight">Pipeline</h1>
-                    <p className="text-muted-foreground text-sm mt-1">Manage your application flow</p>
+                    <h1 className="text-2xl font-display font-bold tracking-tight">Cold Email Pipeline</h1>
+                    <p className="text-muted-foreground text-sm mt-1">Manage your outreach and applications</p>
                 </div>
             </div>
 

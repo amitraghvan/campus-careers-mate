@@ -9,7 +9,6 @@ import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
-    Workflow,
     BarChart3,
     CalendarDays,
     StickyNote,
@@ -20,6 +19,7 @@ import {
     ChevronRight,
     Menu,
     X,
+    Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/hooks";
@@ -29,7 +29,7 @@ import { OpportunityProvider } from "@/features/opportunities/contexts/Opportuni
 
 const NAV_ITEMS = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/pipeline", icon: Workflow, label: "Pipeline" },
+    { to: "/pipeline", icon: Mail, label: "Cold Email" },
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
     { to: "/notes", icon: StickyNote, label: "Notes" },
