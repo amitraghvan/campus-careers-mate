@@ -43,6 +43,8 @@ export function OpportunityDialog({
   const [status, setStatus] = useState<OpportunityStatus>("wishlist");
   const [deadline, setDeadline] = useState("");
   const [pkg, setPkg] = useState("");
+  const [hrName, setHrName] = useState("");
+  const [hrEmail, setHrEmail] = useState("");
   const [notes, setNotes] = useState("");
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -52,6 +54,8 @@ export function OpportunityDialog({
       setStatus(opportunity.status);
       setDeadline(opportunity.deadline);
       setPkg(opportunity.package || "");
+      setHrName(opportunity.hrName || "");
+      setHrEmail(opportunity.hrEmail || "");
       setNotes(opportunity.notes);
     } else if (newOpen) {
       setCompany("");
@@ -59,6 +63,8 @@ export function OpportunityDialog({
       setStatus("wishlist");
       setDeadline("");
       setPkg("");
+      setHrName("");
+      setHrEmail("");
       setNotes("");
     }
     onOpenChange(newOpen);
@@ -75,6 +81,8 @@ export function OpportunityDialog({
         status,
         deadline,
         package: pkg || undefined,
+        hrName: hrName || undefined,
+        hrEmail: hrEmail || undefined,
         notes,
       });
     } else {
@@ -84,7 +92,10 @@ export function OpportunityDialog({
         status,
         deadline,
         package: pkg || undefined,
+        hrName: hrName || undefined,
+        hrEmail: hrEmail || undefined,
         notes,
+        history: [{ status, date: new Date().toISOString() }],
       });
     }
     onOpenChange(false);
@@ -161,6 +172,26 @@ export function OpportunityDialog({
               onChange={(e) => setPkg(e.target.value)}
               placeholder="e.g. ₹25 LPA"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="hrName">HR Name (Optional)</Label>
+              <Input
+                id="hrName"
+                placeholder="e.g. Sarah Jenkins"
+                value={hrName}
+                onChange={(e) => setHrName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="hrEmail">HR Email (Optional)</Label>
+              <Input
+                id="hrEmail"
+                placeholder="e.g. sarah@company.com"
+                value={hrEmail}
+                onChange={(e) => setHrEmail(e.target.value)}
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="notes">Notes</Label>

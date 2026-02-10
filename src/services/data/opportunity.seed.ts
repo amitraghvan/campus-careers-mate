@@ -23,6 +23,8 @@ export function generateSampleOpportunities(): Opportunity[] {
         { id: "c3", text: "Mock interview with peer", done: false },
       ],
       history: [{ status: "interview", date: new Date(now.getTime() - 7 * 86400000).toISOString() }],
+      hrName: "Sarah Jenkins",
+      hrEmail: "sarah.j@google.com",
       createdAt: new Date(now.getTime() - 7 * 86400000).toISOString(),
     },
     {

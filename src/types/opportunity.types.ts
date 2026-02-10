@@ -37,6 +37,10 @@ export interface Opportunity {
   notes: string;
   checklist: ChecklistItem[];
   history: OpportunityStatusHistoryItem[];
+  hrName?: string;
+  hrEmail?: string;
+  outreachSent?: boolean;
+  lastOutreachAt?: string;
   createdAt: string; // ISO datetime string
 }
 

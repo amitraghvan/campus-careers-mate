@@ -16,7 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Mail } from "lucide-react";
+import { ColdEmailModal } from "./ColdEmailModal";
 
 interface OpportunityDetailProps {
   opportunity: Opportunity;
@@ -36,6 +37,7 @@ export function OpportunityDetail({
   const { toggleChecklistItem, addChecklistItem, removeChecklistItem } =
     useOpportunities();
   const [newItem, setNewItem] = useState("");
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const config = STATUS_CONFIG[opportunity.status];
 
   const handleAddItem = () => {
@@ -90,6 +92,45 @@ export function OpportunityDetail({
             </div>
           )}
 
+          {/* HR & Outreach */}
+          {(opportunity.hrName || opportunity.hrEmail) && (
+            <div className="bg-secondary/30 rounded-lg p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cold Outreach</h4>
+                {opportunity.outreachSent && (
+                  <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">
+                    Email Sent
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {opportunity.hrName && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">HR Name</p>
+                    <p className="text-sm font-medium">{opportunity.hrName}</p>
+                  </div>
+                )}
+                {opportunity.hrEmail && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Contact</p>
+                    <p className="text-sm font-medium">{opportunity.hrEmail}</p>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 text-primary hover:text-primary hover:bg-primary/5"
+                onClick={() => setShowEmailModal(true)}
+              >
+                <Mail className="h-4 w-4" />
+                {opportunity.outreachSent ? "Send Follow-up" : "Send Cold Email"}
+              </Button>
+            </div>
+          )}
+
           {/* Checklist */}
           <div>
             <p className="text-xs text-muted-foreground mb-3">
@@ -105,9 +146,8 @@ export function OpportunityDetail({
                     }
                   />
                   <span
-                    className={`text-sm flex-1 ${
-                      item.done ? "line-through text-muted-foreground" : ""
-                    }`}
+                    className={`text-sm flex-1 ${item.done ? "line-through text-muted-foreground" : ""
+                      }`}
                   >
                     {item.text}
                   </span>
@@ -152,6 +192,13 @@ export function OpportunityDetail({
           </div>
         </div>
       </SheetContent>
+
+      <ColdEmailModal
+        open={showEmailModal}
+        onOpenChange={setShowEmailModal}
+        opportunity={opportunity}
+        onSent={() => { }}
+      />
     </Sheet>
   );
 }

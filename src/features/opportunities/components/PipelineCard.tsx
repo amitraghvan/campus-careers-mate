@@ -4,8 +4,10 @@
 
 import { Opportunity } from "@/types";
 import { formatDistanceToNow } from "@/utils/date";
-import { Briefcase, Calendar, Banknote } from "lucide-react";
+import { Briefcase, Calendar, Banknote, Mail } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { ColdEmailModal } from "./ColdEmailModal";
 
 interface PipelineCardProps {
     opportunity: Opportunity;
@@ -13,6 +15,8 @@ interface PipelineCardProps {
 }
 
 export function PipelineCard({ opportunity, isDragging }: PipelineCardProps) {
+    const [showEmailModal, setShowEmailModal] = useState(false);
+
     return (
         <div
             className={`bg-card/90 backdrop-blur-sm border border-border/40 rounded-lg p-3 shadow-sm hover:shadow-md transition-all group ${isDragging ? "ring-2 ring-primary rotate-2 scale-105" : ""
@@ -42,7 +46,25 @@ export function PipelineCard({ opportunity, isDragging }: PipelineCardProps) {
             {/* Footer */}
             <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>{formatDistanceToNow(opportunity.createdAt)}</span>
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowEmailModal(true);
+                    }}
+                    className="p-1 hover:bg-secondary rounded-full text-muted-foreground hover:text-primary transition-colors"
+                    title="Email HR"
+                >
+                    <Mail className="h-3.5 w-3.5" />
+                </button>
             </div>
+
+            <ColdEmailModal
+                open={showEmailModal}
+                onOpenChange={setShowEmailModal}
+                opportunity={opportunity}
+                onSent={() => { }}
+            />
         </div>
     );
 }
