@@ -1,0 +1,156 @@
+// ╔══════════════════════════════════════════════════╗
+// ║   Smart Placement Tracker — Prisma Schema        ║
+// ║   PostgreSQL + Full relational model             ║
+// ╚══════════════════════════════════════════════════╝
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Enums ────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum OpportunityStatus {
+  WISHLIST
+  APPLIED
+  INTERVIEW
+  SELECTED
+  REJECTED
+}
+
+// ── Users ────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  passwordHash  String   @map("password_hash")
+  college       String?
+  avatarUrl     String?  @map("avatar_url")
+  role          Role     @default(STUDENT)
+  isActive      Boolean  @default(true) @map("is_active")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  refreshTokens RefreshToken[]
+  opportunities Opportunity[]
+  notes         Note[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// ── Auth: Refresh Tokens ─────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ── Opportunities ────────────────────────────────
+
+model Opportunity {
+  id        String            @id @default(uuid())
+  userId    String            @map("user_id")
+  company   String
+  role      String
+  status    OpportunityStatus @default(WISHLIST)
+  deadline  DateTime
+  package   String?
+  notes     String            @default("")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checklistItems ChecklistItem[]
+  statusHistory  StatusHistory[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([deadline])
+  @@index([userId, status])
+  @@map("opportunities")
+}
+
+// ── Checklist Items ──────────────────────────────
+
+model ChecklistItem {
+  id            String @id @default(uuid())
+  opportunityId String @map("opportunity_id")
+  text          String
+  done          Boolean @default(false)
+  sortOrder     Int     @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId])
+  @@map("checklist_items")
+}
+
+// ── Status Transition History (Audit Trail) ──────
+
+model StatusHistory {
+  id            String            @id @default(uuid())
+  opportunityId String            @map("opportunity_id")
+  fromStatus    OpportunityStatus @map("from_status")
+  toStatus      OpportunityStatus @map("to_status")
+  changedAt     DateTime          @default(now()) @map("changed_at")
+
+  // Relations
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId])
+  @@index([changedAt])
+  @@map("status_history")
+}
+
+// ── Preparation Notes ────────────────────────────
+
+model Note {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  title         String
+  content       String   @default("") // Markdown content
+  tags          String[] @default([])
+  attachments   String[] @default([]) // URLs / links
+  isPinned      Boolean  @default(false) @map("is_pinned")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isPinned])
+  @@map("notes")
+}
