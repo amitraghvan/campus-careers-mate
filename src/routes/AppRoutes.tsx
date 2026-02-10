@@ -10,7 +10,12 @@ import { ProtectedRoute } from "@/features/auth/components";
 // Lazy-loaded pages for code splitting
 const LandingPage = lazy(() => import("@/features/landing/pages/LandingPage"));
 const AuthPage = lazy(() => import("@/features/auth/pages/AuthPage"));
+const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
+const AnalyticsPage = lazy(() => import("@/features/analytics/pages/AnalyticsPage"));
+const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage"));
+const NotesPage = lazy(() => import("@/features/notes/pages/NotesPage"));
+const ProfilePage = lazy(() => import("@/features/profile/pages/ProfilePage"));
 const NotFoundPage = lazy(() => import("@/routes/pages/NotFoundPage"));
 
 function PageLoader() {
@@ -32,15 +37,20 @@ export function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
 
-        {/* Protected routes */}
+        {/* Protected routes with sidebar layout */}
         <Route
-          path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
 
         {/* Catch-all */}
         <Route path="*" element={<NotFoundPage />} />
