@@ -75,43 +75,140 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground text-sm mt-1">Manage your account and view stats</p>
             </motion.div>
 
-            {/* User card */}
+            {/* User card with Academic Details */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-card rounded-xl p-6"
             >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary shrink-0">
-                        <User className="h-9 w-9 text-primary-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        {isEditing ? (
-                            <div className="space-y-3">
-                                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="bg-secondary/50 border-border/30" />
-                                <Input value={college} onChange={(e) => setCollege(e.target.value)} placeholder="College" className="bg-secondary/50 border-border/30" />
-                                <div className="flex gap-2">
-                                    <Button size="sm" onClick={() => setIsEditing(false)} className="bg-gradient-to-r from-primary to-info text-primary-foreground border-0">
-                                        Save
-                                    </Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                                </div>
+                <div className="flex flex-col gap-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                        <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary shrink-0">
+                            <User className="h-9 w-9 text-primary-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-display font-bold">{user?.name || "User"}</h2>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />{user?.email}</span>
+                                {user?.college && <span className="flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5" />{user.college}</span>}
+                                <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />Joined {user?.createdAt ? formatDate(user.createdAt) : "N/A"}</span>
                             </div>
-                        ) : (
-                            <>
-                                <h2 className="text-xl font-display font-bold">{user?.name || "User"}</h2>
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
-                                    <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />{user?.email}</span>
-                                    {user?.college && <span className="flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5" />{user.college}</span>}
-                                    <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />Joined {user?.createdAt ? formatDate(user.createdAt) : "N/A"}</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                    {!isEditing && (
-                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="shrink-0">
-                            Edit Profile
+                        </div>
+                        <Button variant={isEditing ? "default" : "outline"} size="sm" onClick={() => setIsEditing(!isEditing)} className="shrink-0">
+                            {isEditing ? "Done Editing" : "Edit Profile"}
                         </Button>
+                    </div>
+
+                    {isEditing ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/30 animate-in fade-in slide-in-from-top-2">
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Full Name</label>
+                                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">College</label>
+                                <Input value={college} onChange={(e) => setCollege(e.target.value)} placeholder="College Name" />
+                            </div>
+
+                            <div className="col-span-full border-t border-border/30 my-2" />
+                            <h3 className="col-span-full text-sm font-semibold flex items-center gap-2">
+                                <GraduationCap className="h-4 w-4 text-primary" />
+                                Academic Details
+                            </h3>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Degree & Branch</label>
+                                <Input
+                                    value={user?.academic?.degree || ""}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, degree: e.target.value } } as any)}
+                                    placeholder="e.g. B.Tech CSE"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Current CGPA</label>
+                                <Input
+                                    value={user?.academic?.currentCGPA || ""}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, currentCGPA: e.target.value } } as any)}
+                                    placeholder="e.g. 8.5"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">12th Marks (%)</label>
+                                <Input
+                                    value={user?.academic?.twelfthMarks || ""}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, twelfthMarks: e.target.value } } as any)}
+                                    placeholder="e.g. 92%"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">10th Marks (%)</label>
+                                <Input
+                                    value={user?.academic?.tenthMarks || ""}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, tenthMarks: e.target.value } } as any)}
+                                    placeholder="e.g. 95%"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Backlogs</label>
+                                <Input
+                                    value={user?.academic?.backlogs || ""}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, backlogs: e.target.value } } as any)}
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Resume Actions</label>
+                                <Input
+                                    value={user?.academic?.resumeLink || ""}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, resumeLink: e.target.value } } as any)}
+                                    placeholder="Resume Drive Link"
+                                />
+                            </div>
+
+                            <div className="col-span-full pt-4 flex justify-end gap-2">
+                                <Button
+                                    onClick={async () => {
+                                        await updateProfile({ name, college });
+                                        setIsEditing(false);
+                                    }}
+                                >
+                                    Save Changes
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/30">
+                            <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <p className="text-xs text-muted-foreground">Degree</p>
+                                <p className="font-semibold">{user?.academic?.degree || "Not set"}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <p className="text-xs text-muted-foreground">CGPA</p>
+                                <p className="font-semibold">{user?.academic?.currentCGPA || "N/A"}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <p className="text-xs text-muted-foreground">12th Grade</p>
+                                <p className="font-semibold">{user?.academic?.twelfthMarks || "N/A"}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <p className="text-xs text-muted-foreground">Backlogs</p>
+                                <p className={`font-semibold ${Number(user?.academic?.backlogs) > 0 ? "text-destructive" : "text-success"}`}>
+                                    {user?.academic?.backlogs || "0"}
+                                </p>
+                            </div>
+                            {user?.academic?.resumeLink && (
+                                <div className="col-span-full mt-2">
+                                    <a
+                                        href={user.academic.resumeLink}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                                    >
+                                        <Download className="h-3 w-3" /> View Resume
+                                    </a>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             </motion.div>

@@ -3,6 +3,7 @@
  */
 
 import { useOpportunityContext } from "@/features/opportunities/contexts/OpportunityContext";
+import { Opportunity } from "@/types";
 import { Clock, Plus, ArrowUpRight, CheckCircle2, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "@/utils/date";
 
@@ -15,14 +16,28 @@ interface TimelineEvent {
     time: string;
 }
 
-function buildTimeline(opportunities: { company: string; status: string; createdAt: string }[]): TimelineEvent[] {
+function buildTimeline(opportunities: Opportunity[]): TimelineEvent[] {
     const events: TimelineEvent[] = [];
+    const allHistory: { opp: Opportunity; status: string; date: string }[] = [];
 
-    const sorted = [...opportunities].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    // Collect all history items
+    opportunities.forEach((opp) => {
+        if (opp.history && opp.history.length > 0) {
+            opp.history.forEach((h) => {
+                allHistory.push({ opp, status: h.status, date: h.date });
+            });
+        } else {
+            // Fallback for old data or if history is empty
+            allHistory.push({ opp, status: opp.status, date: opp.createdAt });
+        }
+    });
+
+    // Sort by date descending
+    const sorted = allHistory.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
-    for (const opp of sorted.slice(0, 8)) {
+    for (const item of sorted.slice(0, 8)) {
         const iconMap: Record<string, { icon: typeof Clock; color: string; verb: string }> = {
             wishlist: { icon: Plus, color: "text-info", verb: "Added to wishlist" },
             applied: { icon: ArrowUpRight, color: "text-primary", verb: "Applied" },
@@ -31,15 +46,16 @@ function buildTimeline(opportunities: { company: string; status: string; created
             rejected: { icon: XCircle, color: "text-destructive", verb: "Not selected" },
         };
 
-        const { icon, color, verb } = iconMap[opp.status] || iconMap.wishlist;
+        // Default or unknown status
+        const { icon, color, verb } = iconMap[item.status] || { icon: Clock, color: "text-muted", verb: "Updated" };
 
         events.push({
-            id: `${opp.company}-${opp.createdAt}`,
+            id: `${item.opp.id}-${item.date}`,
             icon,
             iconColor: color,
             title: verb,
-            subtitle: opp.company,
-            time: formatDistanceToNow(opp.createdAt),
+            subtitle: item.opp.company,
+            time: formatDistanceToNow(item.date),
         });
     }
 

@@ -20,6 +20,12 @@ export interface ChecklistItem {
   done: boolean;
 }
 
+/** Record of status changes */
+export interface OpportunityStatusHistoryItem {
+  status: OpportunityStatus;
+  date: string;
+}
+
 /** Core Opportunity entity */
 export interface Opportunity {
   id: string;
@@ -30,6 +36,7 @@ export interface Opportunity {
   package?: string;
   notes: string;
   checklist: ChecklistItem[];
+  history: OpportunityStatusHistoryItem[];
   createdAt: string; // ISO datetime string
 }
 

@@ -42,7 +42,26 @@ export function OpportunityProvider({ children }: { children: ReactNode }) {
 
   const updateOpportunity = useCallback(
     (id: string, updates: Partial<Opportunity>) => {
-      persist((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
+      persist((prev) =>
+        prev.map((o) => {
+          if (o.id === id) {
+            const updated = { ...o, ...updates };
+
+            // If status changed, log to history
+            if (updates.status && updates.status !== o.status) {
+              const newHistoryItem = {
+                status: updates.status,
+                date: new Date().toISOString(),
+              };
+              // Ensure history exists (for legacy data)
+              updated.history = [...(o.history || []), newHistoryItem];
+            }
+
+            return updated;
+          }
+          return o;
+        })
+      );
     },
     [persist]
   );
@@ -60,11 +79,11 @@ export function OpportunityProvider({ children }: { children: ReactNode }) {
         prev.map((o) =>
           o.id === oppId
             ? {
-                ...o,
-                checklist: o.checklist.map((c) =>
-                  c.id === itemId ? { ...c, done: !c.done } : c
-                ),
-              }
+              ...o,
+              checklist: o.checklist.map((c) =>
+                c.id === itemId ? { ...c, done: !c.done } : c
+              ),
+            }
             : o
         )
       );
@@ -78,12 +97,12 @@ export function OpportunityProvider({ children }: { children: ReactNode }) {
         prev.map((o) =>
           o.id === oppId
             ? {
-                ...o,
-                checklist: [
-                  ...o.checklist,
-                  { id: crypto.randomUUID(), text, done: false },
-                ],
-              }
+              ...o,
+              checklist: [
+                ...o.checklist,
+                { id: crypto.randomUUID(), text, done: false },
+              ],
+            }
             : o
         )
       );

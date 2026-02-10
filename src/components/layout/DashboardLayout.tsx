@@ -9,6 +9,7 @@ import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
+    Workflow,
     BarChart3,
     CalendarDays,
     StickyNote,
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/pipeline", icon: Workflow, label: "Pipeline" },
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
     { to: "/notes", icon: StickyNote, label: "Notes" },

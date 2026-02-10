@@ -2,12 +2,24 @@
  * Auth Types — user, session, and auth form contracts.
  */
 
+export interface AcademicProfile {
+  tenthMarks: string;
+  twelfthMarks: string;
+  degree: string;
+  branch: string;
+  currentCGPA: string;
+  backlogs: string; // "0" or number
+  skills: string; // comma separated
+  resumeLink: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   college?: string;
   avatarUrl?: string;
+  academic?: AcademicProfile;
   createdAt: string;
 }
 

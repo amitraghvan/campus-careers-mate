@@ -27,6 +27,8 @@ interface AuthContextType {
   signIn: (dto: SignInDTO) => Promise<void>;
   /** Sign up with name/email/password */
   signUp: (dto: SignUpDTO) => Promise<void>;
+  /** Update profile */
+  updateProfile: (updates: Partial<User>) => Promise<void>;
   /** Sign out */
   signOut: () => Promise<void>;
 }
@@ -74,6 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (updates: Partial<User>) => {
+    if (!user) return;
+    setIsLoading(true); // varying loading state might be better, but this works for now
+    try {
+      const updatedUser = await authService.updateProfile(user.id, updates);
+      setUser(updatedUser);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]); // depend on user to get current ID
+
   return (
     <AuthContext.Provider
       value={{
@@ -84,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
+        updateProfile,
       }}
     >
       {children}

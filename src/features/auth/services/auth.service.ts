@@ -17,7 +17,7 @@ function delay(ms = 600): Promise<void> {
 export const authService = {
   /** Get saved users from storage */
   getUsers(): Record<string, { user: User; passwordHash: string }> {
-    return storage.get(USERS_KEY, {});
+    return storage.get(USERS_KEY, {}) as Record<string, { user: User; passwordHash: string }>;
   },
 
   /** Get current session */
@@ -33,6 +33,40 @@ export const authService = {
   /** Clear session */
   clearSession(): void {
     storage.remove(AUTH_STORAGE_KEY);
+  },
+
+  /** Update user profile */
+  async updateProfile(userId: string, updates: Partial<User>): Promise<User> {
+    await delay();
+
+    const users = this.getUsers();
+    let foundEmail = "";
+
+    // Find user by ID (since we key by email)
+    for (const [email, record] of Object.entries(users)) {
+      if (record.user.id === userId) {
+        foundEmail = email;
+        break;
+      }
+    }
+
+    if (!foundEmail) throw new Error("User not found");
+
+    // Update user record
+    // @ts-ignore - we know structure from getUsers but TS is being strict about object entries
+    const updatedUser = { ...users[foundEmail].user, ...updates };
+    users[foundEmail].user = updatedUser;
+
+    // Save back to storage
+    storage.set(USERS_KEY, users);
+
+    // Update current session if active
+    const session = this.getSession();
+    if (session && session.user.id === userId) {
+      this.saveSession({ ...session, user: updatedUser });
+    }
+
+    return updatedUser;
   },
 
   /** Sign up — create a new user */

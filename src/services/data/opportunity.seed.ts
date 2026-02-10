@@ -22,6 +22,7 @@ export function generateSampleOpportunities(): Opportunity[] {
         { id: "c2", text: "Practice system design", done: false },
         { id: "c3", text: "Mock interview with peer", done: false },
       ],
+      history: [{ status: "interview", date: new Date(now.getTime() - 7 * 86400000).toISOString() }],
       createdAt: new Date(now.getTime() - 7 * 86400000).toISOString(),
     },
     {
@@ -35,6 +36,7 @@ export function generateSampleOpportunities(): Opportunity[] {
       checklist: [
         { id: "c4", text: "Prepare product case studies", done: false },
       ],
+      history: [{ status: "applied", date: new Date(now.getTime() - 3 * 86400000).toISOString() }],
       createdAt: new Date(now.getTime() - 3 * 86400000).toISOString(),
     },
     {
@@ -46,6 +48,7 @@ export function generateSampleOpportunities(): Opportunity[] {
       package: "₹1.2L/month",
       notes: "",
       checklist: [],
+      history: [{ status: "wishlist", date: new Date(now.getTime() - 1 * 86400000).toISOString() }],
       createdAt: new Date(now.getTime() - 1 * 86400000).toISOString(),
     },
     {
@@ -60,6 +63,7 @@ export function generateSampleOpportunities(): Opportunity[] {
         { id: "c5", text: "Review offer letter", done: true },
         { id: "c6", text: "Discuss with family", done: true },
       ],
+      history: [{ status: "selected", date: new Date(now.getTime() - 14 * 86400000).toISOString() }],
       createdAt: new Date(now.getTime() - 14 * 86400000).toISOString(),
     },
   ];

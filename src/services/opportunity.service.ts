@@ -34,6 +34,7 @@ export const opportunityService = {
       ...dto,
       id: crypto.randomUUID(),
       checklist: [],
+      history: [{ status: dto.status, date: new Date().toISOString() }],
       createdAt: new Date().toISOString(),
     };
   },
