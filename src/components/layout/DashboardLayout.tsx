@@ -67,23 +67,28 @@ export default function DashboardLayout() {
                     mobileOpen ? "w-[260px] translate-x-0" : "w-[260px] -translate-x-full lg:translate-x-0"
                 )}
             >
-                {/* Logo */}
+                {/* Logo — click to go to landing page */}
                 <div className={cn(
                     "flex items-center gap-3 px-4 h-16 border-b border-border/30 shrink-0",
                     collapsed && "justify-center px-0"
                 )}>
-                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary shrink-0">
-                        <GraduationCap className="h-4.5 w-4.5 text-primary-foreground" />
-                    </div>
-                    {!collapsed && (
-                        <motion.span
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-lg font-display font-bold tracking-tight whitespace-nowrap"
-                        >
-                            {APP_CONFIG.name}
-                        </motion.span>
-                    )}
+                    <button
+                        onClick={() => navigate("/")}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary shrink-0">
+                            <GraduationCap className="h-4.5 w-4.5 text-primary-foreground" />
+                        </div>
+                        {!collapsed && (
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="text-lg font-display font-bold tracking-tight whitespace-nowrap"
+                            >
+                                {APP_CONFIG.name}
+                            </motion.span>
+                        )}
+                    </button>
                     {/* Mobile close */}
                     <button
                         onClick={() => setMobileOpen(false)}
