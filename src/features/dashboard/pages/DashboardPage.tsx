@@ -7,6 +7,7 @@ import { StatsCards, StatusBreakdown } from "@/features/dashboard/components";
 import { UpcomingDeadlines } from "@/features/deadlines/components";
 import { OpportunityList } from "@/features/opportunities/components";
 import { ActivityTimeline } from "@/features/dashboard/components/ActivityTimeline";
+import { DailyMomentumWidget } from "@/features/dashboard/components/DailyMomentumWidget";
 import { motion } from "framer-motion";
 
 export default function DashboardPage() {
@@ -20,6 +21,14 @@ export default function DashboardPage() {
         >
           <h1 className="text-2xl font-display font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-1">Track your placement journey</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <DailyMomentumWidget />
         </motion.div>
 
         <motion.div
