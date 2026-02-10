@@ -41,3 +41,4 @@ export function formatDate(dateStr: string): string {
 export function getMonthName(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString("en-IN", { month: "short" });
 }
+

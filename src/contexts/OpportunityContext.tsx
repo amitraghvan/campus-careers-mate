@@ -175,3 +175,4 @@ export function useOpportunities() {
   if (!ctx) throw new Error("useOpportunities must be used within OpportunityProvider");
   return ctx;
 }
+

@@ -39,3 +39,4 @@ export const scaleIn = {
     transition: { duration: 0.5 },
   },
 };
+

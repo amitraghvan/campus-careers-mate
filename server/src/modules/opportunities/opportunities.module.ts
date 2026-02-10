@@ -12,3 +12,4 @@ import { OpportunitiesService } from "./opportunities.service";
   exports: [OpportunitiesService],
 })
 export class OpportunitiesModule {}
+

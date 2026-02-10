@@ -17,3 +17,4 @@ export function ContentArea({ children, className }: ContentAreaProps) {
     </main>
   );
 }
+

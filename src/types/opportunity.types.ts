@@ -38,3 +38,4 @@ export type CreateOpportunityDTO = Omit<Opportunity, "id" | "createdAt" | "check
 
 /** DTO for updating an existing opportunity */
 export type UpdateOpportunityDTO = Partial<Opportunity>;
+

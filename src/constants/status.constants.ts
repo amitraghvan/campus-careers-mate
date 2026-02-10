@@ -63,3 +63,4 @@ export const ACTIVE_STATUSES: OpportunityStatus[] = [
 
 /** Terminal statuses */
 export const TERMINAL_STATUSES: OpportunityStatus[] = ["selected", "rejected"];
+

@@ -44,3 +44,4 @@ export class UsersController {
     return this.usersService.deactivateAccount(userId);
   }
 }
+

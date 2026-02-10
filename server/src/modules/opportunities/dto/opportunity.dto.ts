@@ -127,3 +127,4 @@ export class OpportunityQueryDto {
   @IsString()
   sortOrder?: "asc" | "desc";
 }
+

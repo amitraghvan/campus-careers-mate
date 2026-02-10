@@ -43,3 +43,4 @@ export const opportunityService = {
     storage.remove(STORAGE_KEY);
   },
 };
+

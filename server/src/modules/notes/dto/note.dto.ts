@@ -44,3 +44,4 @@ export class CreateNoteDto {
 }
 
 export class UpdateNoteDto extends PartialType(CreateNoteDto) {}
+

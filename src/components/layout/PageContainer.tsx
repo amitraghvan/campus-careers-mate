@@ -23,3 +23,4 @@ export function PageContainer({ children, withEffects = true }: PageContainerPro
     </div>
   );
 }
+

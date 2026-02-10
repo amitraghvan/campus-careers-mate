@@ -77,3 +77,4 @@ export class NotesController {
     return this.notesService.togglePin(userId, id);
   }
 }
+

@@ -121,3 +121,4 @@ export function OpportunityDialog({ open, onOpenChange, opportunity }: Props) {
     </Dialog>
   );
 }
+

@@ -155,3 +155,4 @@ export function resetDatabase(): void {
     initPromise = null;
   }
 }
+

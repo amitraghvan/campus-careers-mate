@@ -57,3 +57,4 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     </DatabaseContext.Provider>
   );
 }
+

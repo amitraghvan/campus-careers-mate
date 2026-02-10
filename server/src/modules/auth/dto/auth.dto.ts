@@ -58,3 +58,4 @@ export class RefreshTokenDto {
   @IsNotEmpty()
   refreshToken!: string;
 }
+

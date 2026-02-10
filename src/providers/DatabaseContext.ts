@@ -16,3 +16,4 @@ export const DatabaseContext = createContext<DatabaseContextValue>({
   isReady: false,
   error: null,
 });
+

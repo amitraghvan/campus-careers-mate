@@ -58,3 +58,4 @@ export const APP_CONFIG = {
 } as const;
 
 export type AppConfig = typeof APP_CONFIG;
+

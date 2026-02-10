@@ -48,3 +48,4 @@ export const STATS = [
   { value: "500+", label: "Companies Listed", icon: TrendingUp },
   { value: "98%", label: "Deadline Hit Rate", icon: Clock },
 ] as const;
+

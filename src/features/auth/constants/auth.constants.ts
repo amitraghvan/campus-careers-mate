@@ -32,3 +32,4 @@ export const AUTH_ERRORS = {
 } as const;
 
 export const AUTH_STORAGE_KEY = "placement-tracker-auth";
+

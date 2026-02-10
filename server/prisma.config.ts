@@ -11,3 +11,4 @@ export default defineConfig({
     path: path.join(__dirname, "prisma", "migrations"),
   },
 });
+

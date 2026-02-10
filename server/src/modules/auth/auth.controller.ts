@@ -72,3 +72,4 @@ export class AuthController {
     return { message: "Signed out successfully" };
   }
 }
+

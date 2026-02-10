@@ -5,3 +5,4 @@
 
 export type { OpportunityStatus, ChecklistItem, Opportunity } from "@/types/opportunity.types";
 export { STATUS_CONFIG } from "@/constants/status.constants";
+

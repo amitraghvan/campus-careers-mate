@@ -189,3 +189,4 @@ export function OpportunityDialog({
     </Dialog>
   );
 }
+

@@ -30,3 +30,4 @@ export interface SignUpDTO {
 }
 
 export type AuthMode = "sign-in" | "sign-up";
+

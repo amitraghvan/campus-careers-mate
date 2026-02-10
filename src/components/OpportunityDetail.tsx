@@ -118,3 +118,4 @@ export function OpportunityDetail({ opportunity, open, onOpenChange, onEdit, onD
     </Sheet>
   );
 }
+
