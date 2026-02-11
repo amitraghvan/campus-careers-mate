@@ -105,13 +105,18 @@ export class AuthService {
 
       // Log the actual error server-side
       this.logger.error(
-        `Sign-up failed for ${dto.email}: ${error instanceof Error ? error.message : String(error)}`,
+        `Sign-up failed for ${dto.email}. Error: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
 
+      // Check for specific configuration issues that might cause this
+      if (!this.config.get("JWT_ACCESS_SECRET")) {
+        this.logger.error("CRITICAL: JWT_ACCESS_SECRET is missing or invalid in configuration!");
+      }
+
       // Return a user-friendly error
       throw new InternalServerErrorException(
-        'Unable to create account. Please try again later.',
+        'Unable to create account. Please contact support if the issue persists.',
       );
     }
   }

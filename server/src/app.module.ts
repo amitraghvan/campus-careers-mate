@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ScheduleModule } from "@nestjs/schedule";
 import { APP_GUARD } from "@nestjs/core";
+import { envValidationSchema } from "./config/env.validation";
 
 // Core
 import { PrismaModule } from "./common/prisma/prisma.module";
@@ -29,6 +30,11 @@ import { ChatModule } from './modules/chat/chat.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env",
+      validationSchema: envValidationSchema,
+      validationOptions: {
+        allowUnknown: true,
+        abortEarly: true,
+      },
     }),
 
     // ── Rate Limiting ─────────────────────────────
