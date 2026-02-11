@@ -6,14 +6,6 @@
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
-import { neonConfig, Pool as NeonPool } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
-import { Pool as PgPool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-import ws from "ws";
-
-// Required for Node.js environments (Neon serverless uses WebSockets)
-neonConfig.webSocketConstructor = ws;
 
 @Injectable()
 export class PrismaService
@@ -25,7 +17,6 @@ export class PrismaService
     const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString) {
-      // Log a clear error and use a dummy connection that will fail gracefully
       console.error(
         '❌ DATABASE_URL environment variable is not set! ' +
         'Please set it in your environment (Render Dashboard → Environment tab).'
@@ -35,29 +26,26 @@ export class PrismaService
       return;
     }
 
-    const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
+    // Use standard TCP connection for Node.js environments (Render)
+    super({
+      datasources: {
+        db: {
+          url: connectionString,
+        },
+      },
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let options: any = {};
-
-    if (!isLocal) {
-      const pool = new NeonPool({ connectionString });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const adapter = new PrismaNeon(pool as any);
-      options = { adapter };
-    } else {
-      const pool = new PgPool({ connectionString });
-      const adapter = new PrismaPg(pool);
-      options = { adapter };
-    }
-
-    super(options);
     this.logger = new Logger(PrismaService.name);
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log("✅ Database connected (Neon serverless adapter)");
+    try {
+      await this.$connect();
+      this.logger.log("✅ Database connected");
+    } catch (error) {
+      this.logger.error("❌ Database connection failed", error);
+      throw error;
+    }
   }
 
   async onModuleDestroy() {
