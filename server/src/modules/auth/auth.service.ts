@@ -53,48 +53,66 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
-  ) {}
+  ) { }
 
   // ── Sign Up ────────────────────────────────────
 
   async signUp(dto: SignUpDto, userAgent?: string, ip?: string): Promise<AuthResponse> {
-    const emailLower = dto.email.toLowerCase().trim();
+    console.log("DEBUG: AuthService.signUp called with email:", dto.email);
+    try {
+      const emailLower = dto.email.toLowerCase().trim();
 
-    // Check for duplicate
-    const existing = await this.prisma.user.findUnique({
-      where: { email: emailLower },
-    });
-    if (existing) {
-      throw new ConflictException("An account with this email already exists");
+      console.log("DEBUG: Before findUnique");
+      // Check for duplicate
+      const existing = await this.prisma.user.findUnique({
+        where: { email: emailLower },
+      });
+      console.log("DEBUG: After findUnique, existing:", !!existing);
+      if (existing) {
+        throw new ConflictException("An account with this email already exists");
+      }
+
+      console.log("DEBUG: Before bcrypt");
+      // Hash password
+      const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
+      console.log("DEBUG: After bcrypt");
+
+      console.log("DEBUG: Before user.create");
+      // Create user in transaction
+      const user = await this.prisma.user.create({
+        data: {
+          email: emailLower,
+          name: dto.name.trim(),
+          passwordHash,
+          college: dto.college?.trim() || null,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          college: true,
+          avatarUrl: true,
+        },
+      });
+      console.log("DEBUG: User created:", user.id);
+
+      console.log("DEBUG: Before generateTokenPair");
+      // Generate tokens
+      const tokens = await this.generateTokenPair(user.id, user.email, user.role, userAgent, ip);
+      console.log("DEBUG: After generateTokenPair");
+
+      this.logger.log(`New user registered: ${user.email}`);
+
+      return { user, tokens };
+    } catch (error) {
+      console.error("DEBUG: AuthService.signUp failed:");
+      console.error("DEBUG: Error Type:", error?.constructor?.name);
+      console.error("DEBUG: Error Keys:", Object.keys(error as any));
+      console.error("DEBUG: Error String:", String(error));
+      console.error("DEBUG: Error JSON:", JSON.stringify(error, null, 2));
+      throw error;
     }
-
-    // Hash password
-    const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-
-    // Create user in transaction
-    const user = await this.prisma.user.create({
-      data: {
-        email: emailLower,
-        name: dto.name.trim(),
-        passwordHash,
-        college: dto.college?.trim() || null,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        college: true,
-        avatarUrl: true,
-      },
-    });
-
-    // Generate tokens
-    const tokens = await this.generateTokenPair(user.id, user.email, user.role, userAgent, ip);
-
-    this.logger.log(`New user registered: ${user.email}`);
-
-    return { user, tokens };
   }
 
   // ── Sign In ────────────────────────────────────

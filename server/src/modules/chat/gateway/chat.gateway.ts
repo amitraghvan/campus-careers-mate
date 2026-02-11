@@ -19,38 +19,36 @@ import { ChatService } from '../services/chat.service';
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(
     private jwtService: JwtService,
     private chatService: ChatService,
   ) { }
 
+  afterInit(server: Server) {
+    console.log('ChatGateway initialized');
+  }
+
   async handleConnection(client: Socket) {
     try {
-      // Extract token from handshake auth or query
-      const token =
-        client.handshake.auth?.token || client.handshake.query?.token;
-
+      const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
       if (!token) {
+        console.log('No token provided, disconnecting...');
         client.disconnect();
         return;
       }
 
       // Verify token
-      // process.env.JWT_ACCESS_SECRET should be available
-      const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_ACCESS_SECRET,
-      });
+      const payload = this.jwtService.verify(token);
+      client.data.user = payload; // Attach user to socket
 
-      // Attach user to socket
-      client.data.user = payload;
+      // Join user to their own room for targeted messages
+      client.join(`user_${payload.sub}`);
 
-      // Join user's personal room for notifications
-      await client.join(`user:${payload.userId}`);
-      console.log(`User connected: ${payload.userId}`);
+      console.log(`Client connected: ${client.id}, User: ${payload.sub}`);
     } catch (e) {
-      console.error('WebSocket connection failed:', e.message);
+      console.error('WebSocket connection failed:', (e as Error).message);
       client.disconnect();
     }
   }

@@ -11,26 +11,26 @@ export class PeerConnectionController {
 
     @Post('request/:userId')
     sendRequest(@CurrentUser() user: any, @Param('userId') receiverId: string) {
-        return this.peerConnectionService.sendRequest(user.userId, receiverId);
+        return this.peerConnectionService.sendRequest(user.id, receiverId);
     }
 
     @Patch('accept/:requestId')
     acceptRequest(@CurrentUser() user: any, @Param('requestId') requestId: string) {
-        return this.peerConnectionService.respondToRequest(requestId, user.userId, ConnectionStatus.ACCEPTED);
+        return this.peerConnectionService.respondToRequest(requestId, user.id, ConnectionStatus.ACCEPTED);
     }
 
     @Delete('reject/:requestId')
     rejectRequest(@CurrentUser() user: any, @Param('requestId') requestId: string) {
-        return this.peerConnectionService.rejectRequest(requestId, user.userId);
+        return this.peerConnectionService.rejectRequest(requestId, user.id);
     }
 
     @Get()
     getConnections(@CurrentUser() user: any) {
-        return this.peerConnectionService.getConnections(user.userId);
+        return this.peerConnectionService.getConnections(user.id);
     }
 
     @Get('incoming')
     getIncomingRequests(@CurrentUser() user: any) {
-        return this.peerConnectionService.getIncomingRequests(user.userId);
+        return this.peerConnectionService.getIncomingRequests(user.id);
     }
 }

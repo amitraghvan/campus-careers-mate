@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, Users, GraduationCap } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,13 +13,63 @@ export default function PeerDiscoveryPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState<"ALL" | "SDE" | "DATA">("ALL");
 
-    // Mock user update logic for now
-    const [peers, setPeers] = useState<Peer[]>(peerService.getPeers());
+    const [peers, setPeers] = useState<Peer[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleConnect = (id: string) => {
+    useEffect(() => {
+        loadPeers();
+    }, []);
+
+    const loadPeers = async () => {
+        setLoading(true);
+        try {
+            const data = await peerService.getPeers();
+            setPeers(data);
+        } catch (error) {
+            console.error("Failed to load peers", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConnect = async (id: string, requestId?: string) => { // Updated signature
+        // Optimistic update
         setPeers(current => current.map(p =>
             p.id === id ? { ...p, status: "PENDING" } : p
         ));
+
+        try {
+            // Check if it's accept or request
+            // For discovery, it is usually Request.
+            // But if status was PENDING (incoming), it means Accept.
+            // MicroPortfolioCard might need to distinguish.
+            // For now, assume "Connect" button means "Send Request".
+            // If the user is in "Incoming Request" state, the button should say "Accept".
+            // I need to check peer status.
+            const peer = peers.find(p => p.id === id);
+            if (peer?.status === "PENDING" && peer.requestId) {
+                // It's an incoming request, so ACCEPT it.
+                // Wait, if status is PENDING, MicroPortfolioCard might show "Pending" (disabled).
+                // But my service returns PENDING for incoming requests too.
+                // I need to distinguish "Incoming Pending" vs "Outgoing Pending".
+                // My `getPeers` mapping:
+                // Incoming -> status: PENDING, requestId: ...
+                // Outgoing -> status: PENDING (but I didn't map outgoing requests in getPeers! I only mapped connections and incoming).
+                // I should map outgoing requests too if I want to show them.
+                // For now, if requestId exists, it is incoming -> Accept.
+                await peerService.acceptConnectionRequest(peer.requestId);
+                setPeers(current => current.map(p =>
+                    p.id === id ? { ...p, status: "CONNECTED" } : p
+                ));
+            } else {
+                // Send Request
+                await peerService.sendConnectionRequest(id);
+            }
+        } catch (error) {
+            console.error("Action failed", error);
+            // Revert
+            loadPeers();
+        }
     };
 
     const handleChat = (id: string) => {

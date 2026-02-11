@@ -9,27 +9,42 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function PeerChatPage() {
-    const [selectedPeerId, setSelectedPeerId] = useState<string | null>("3"); // Default to Aditya
+    const [peers, setPeers] = useState<Peer[]>([]);
+    const [selectedPeerId, setSelectedPeerId] = useState<string | null>(null);
     const [messageText, setMessageText] = useState("");
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
-    // Get Connected Peers
-    const peers = peerService.getPeers().filter(p => p.status === "CONNECTED");
+    useEffect(() => {
+        const loadPeers = async () => {
+            const allPeers = await peerService.getPeers();
+            const connected = allPeers.filter(p => p.status === "CONNECTED");
+            setPeers(connected);
+            if (connected.length > 0 && !selectedPeerId) {
+                setSelectedPeerId(connected[0].id);
+            }
+        };
+        loadPeers();
+    }, []);
+
     const activePeer = selectedPeerId ? peers.find(p => p.id === selectedPeerId) : null;
 
     useEffect(() => {
         if (selectedPeerId) {
-            setChatHistory(peerService.getChatHistory(selectedPeerId));
+            peerService.getChatHistory(selectedPeerId).then(setChatHistory);
         }
     }, [selectedPeerId]);
 
-    const handleSend = (e: React.FormEvent) => {
+    const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!messageText.trim() || !selectedPeerId) return;
 
-        const newMsg = peerService.sendMessage(selectedPeerId, messageText);
-        setChatHistory(prev => [...prev, newMsg]);
-        setMessageText("");
+        try {
+            const newMsg = await peerService.sendMessage(selectedPeerId, messageText);
+            setChatHistory(prev => [...prev, newMsg]);
+            setMessageText("");
+        } catch (e) {
+            console.error("Failed to send", e);
+        }
     };
 
     return (

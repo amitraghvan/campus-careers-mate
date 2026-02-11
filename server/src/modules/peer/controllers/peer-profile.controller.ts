@@ -16,17 +16,17 @@ export class PeerProfileController {
 
     @Get('discover')
     discover(@CurrentUser() user: any, @Query() query: PeerDiscoveryQueryDto) {
-        return this.peerDiscoveryService.discoverPeers(user.userId, query);
+        return this.peerDiscoveryService.discoverPeers(user.id, query);
     }
 
     @Post()
     createOrUpdate(@CurrentUser() user: any, @Body() dto: CreatePeerProfileDto) {
-        return this.peerProfileService.createOrUpdate(user.userId, dto);
+        return this.peerProfileService.createOrUpdate(user.id, dto);
     }
 
     @Get('me')
     getMyProfile(@CurrentUser() user: any) {
-        return this.peerProfileService.getMyProfile(user.userId);
+        return this.peerProfileService.getMyProfile(user.id);
     }
 
     @Get(':id')

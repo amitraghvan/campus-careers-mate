@@ -2,14 +2,15 @@ import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class CreatePeerProfileDto {
     @IsString()
-    college: string;
+    @IsString()
+    college!: string;
 
     @IsArray()
     @IsString({ each: true })
-    targetJobRoles: string[];
+    targetJobRoles!: string[];
 
     @IsString()
-    placementStage: string;
+    placementStage!: string;
 
     @IsString()
     @IsOptional()

@@ -1,25 +1,9 @@
-/**
- * Auth Service — handles authentication persistence.
- * Currently uses localStorage. Swap to a real API in production.
- */
-
 import { storage } from "@/utils";
 import { AUTH_STORAGE_KEY } from "@/features/auth/constants";
 import type { User, AuthSession, SignInDTO, SignUpDTO } from "@/features/auth/types";
-
-const USERS_KEY = "placement-tracker-users";
-
-/** Simulated delay for realistic UX */
-function delay(ms = 600): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { api } from "@/lib/api";
 
 export const authService = {
-  /** Get saved users from storage */
-  getUsers(): Record<string, { user: User; passwordHash: string }> {
-    return storage.get(USERS_KEY, {}) as Record<string, { user: User; passwordHash: string }>;
-  },
-
   /** Get current session */
   getSession(): AuthSession | null {
     return storage.get<AuthSession | null>(AUTH_STORAGE_KEY, null);
@@ -37,68 +21,47 @@ export const authService = {
 
   /** Update user profile */
   async updateProfile(userId: string, updates: Partial<User>): Promise<User> {
-    await delay();
-
-    const users = this.getUsers();
-    let foundEmail = "";
-
-    // Find user by ID (since we key by email)
-    for (const [email, record] of Object.entries(users)) {
-      if (record.user.id === userId) {
-        foundEmail = email;
-        break;
-      }
-    }
-
-    if (!foundEmail) throw new Error("User not found");
-
-    // Update user record
-    // @ts-ignore - we know structure from getUsers but TS is being strict about object entries
-    const updatedUser = { ...users[foundEmail].user, ...updates };
-    users[foundEmail].user = updatedUser;
-
-    // Save back to storage
-    storage.set(USERS_KEY, users);
-
-    // Update current session if active
+    // In a real app, send PATCH /users/me
+    // For now, update local session if needed, but backend is source of truth
     const session = this.getSession();
-    if (session && session.user.id === userId) {
+    if (session) {
+      const updatedUser = { ...session.user, ...updates };
       this.saveSession({ ...session, user: updatedUser });
+      return updatedUser;
     }
-
-    return updatedUser;
+    throw new Error("No session");
   },
 
   /** Sign up — create a new user */
   async signUp(dto: SignUpDTO): Promise<AuthSession> {
-    await delay();
+    const response = await api.post<any>("/auth/signup", {
+      email: dto.email,
+      password: dto.password,
+      name: dto.name,
+      college: dto.college
+    });
 
-    const users = this.getUsers();
-    const emailKey = dto.email.toLowerCase().trim();
+    // Create Profile automatically?
+    // My backend creates User. Profile creation is separate.
+    // I should create profile if needed, or rely on user doing it later.
+    // For now, return session.
 
-    if (users[emailKey]) {
-      throw new Error("An account with this email already exists");
-    }
-
-    const user: User = {
-      id: crypto.randomUUID(),
-      name: dto.name.trim(),
-      email: emailKey,
-      college: dto.college?.trim() || undefined,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Store user (password stored as simple hash — demo only)
-    users[emailKey] = {
-      user,
-      passwordHash: btoa(dto.password), // NOT production safe — demo only
-    };
-    storage.set(USERS_KEY, users);
-
+    // Backend returns { accessToken, refreshToken, user }
     const session: AuthSession = {
-      user,
-      token: crypto.randomUUID(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      user: {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        college: response.user.college,
+        createdAt: response.user.createdAt,
+        // map other fields
+      },
+      token: response.accessToken, // use accessToken as token
+      // @ts-ignore
+      accessToken: response.accessToken,
+      // @ts-ignore
+      refreshToken: response.refreshToken,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 mins default
     };
 
     this.saveSession(session);
@@ -107,20 +70,26 @@ export const authService = {
 
   /** Sign in — authenticate an existing user */
   async signIn(dto: SignInDTO): Promise<AuthSession> {
-    await delay();
+    const response = await api.post<any>("/auth/signin", {
+      email: dto.email,
+      password: dto.password
+    });
 
-    const users = this.getUsers();
-    const emailKey = dto.email.toLowerCase().trim();
-    const record = users[emailKey];
-
-    if (!record || record.passwordHash !== btoa(dto.password)) {
-      throw new Error("Invalid email or password");
-    }
-
+    // Backend returns { accessToken, refreshToken, user }
     const session: AuthSession = {
-      user: record.user,
-      token: crypto.randomUUID(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      user: {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        college: response.user.college,
+        createdAt: response.user.createdAt,
+      },
+      token: response.accessToken,
+      // @ts-ignore
+      accessToken: response.accessToken,
+      // @ts-ignore
+      refreshToken: response.refreshToken,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     };
 
     this.saveSession(session);
@@ -129,7 +98,9 @@ export const authService = {
 
   /** Sign out */
   async signOut(): Promise<void> {
-    await delay(300);
+    try {
+      await api.post("/auth/signout", {});
+    } catch (e) { /* ignore */ }
     this.clearSession();
   },
 };

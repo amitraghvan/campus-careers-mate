@@ -11,6 +11,7 @@ export interface Peer {
     skills: string[];
     bio: string; // Short 1-line headline
     status: ConnectionStatus;
+    requestId?: string; // For pending requests
     isOnline?: boolean;
     lastActive?: string;
 }

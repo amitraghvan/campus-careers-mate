@@ -70,9 +70,19 @@ export function MicroPortfolioCard({ peer, onConnect, onChat }: MicroPortfolioCa
                         <MessageSquare className="h-4 w-4" /> Message
                     </Button>
                 ) : peer.status === "PENDING" ? (
-                    <Button className="w-full gap-2" variant="outline" disabled>
-                        <Clock className="h-4 w-4" /> Request Sent
-                    </Button>
+                    peer.requestId ? (
+                        <Button
+                            className="w-full gap-2"
+                            variant="default"
+                            onClick={() => onConnect?.(peer.id)}
+                        >
+                            <Check className="h-4 w-4" /> Accept Request
+                        </Button>
+                    ) : (
+                        <Button className="w-full gap-2" variant="outline" disabled>
+                            <Clock className="h-4 w-4" /> Request Sent
+                        </Button>
+                    )
                 ) : (
                     <Button
                         className="w-full gap-2"
