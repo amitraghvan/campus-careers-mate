@@ -1,13 +1,14 @@
 import { AUTH_STORAGE_KEY } from "@/features/auth/constants";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_PREFIX = "/api/v1";
 
 type RequestOptions = RequestInit & {
     headers?: any;
 };
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const url = `${BASE_URL}${endpoint}`;
+    const url = `${API_BASE}${API_PREFIX}${endpoint}`;
 
     // Get token
     let token = "";
@@ -15,8 +16,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         const stored = localStorage.getItem(AUTH_STORAGE_KEY);
         if (stored) {
             const session = JSON.parse(stored);
-            // My backend returns accessToken
-            token = session?.accessToken || session?.token || "";
+            token = session?.accessToken || session?.token || session?.tokens?.accessToken || "";
         }
     } catch (e) {
         console.warn("Failed to retrieve token", e);
@@ -35,12 +35,19 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(error.message || "Network request failed");
+        throw new Error(error.message || `Cannot ${options.method || "GET"} ${endpoint}`);
     }
 
     if (response.status === 204) return {} as T;
 
-    return response.json();
+    const json = await response.json();
+
+    // Unwrap standard API envelope { success: true, data: T }
+    if (json && json.success === true && json.data !== undefined) {
+        return json.data as T;
+    }
+
+    return json as T;
 }
 
 export const api = {

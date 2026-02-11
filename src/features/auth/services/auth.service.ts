@@ -46,7 +46,7 @@ export const authService = {
     // I should create profile if needed, or rely on user doing it later.
     // For now, return session.
 
-    // Backend returns { accessToken, refreshToken, user }
+    // Backend returns { user, tokens: { accessToken, refreshToken, expiresIn } }
     const session: AuthSession = {
       user: {
         id: response.user.id,
@@ -54,14 +54,13 @@ export const authService = {
         email: response.user.email,
         college: response.user.college,
         createdAt: response.user.createdAt,
-        // map other fields
       },
-      token: response.accessToken, // use accessToken as token
+      token: response.tokens.accessToken,
       // @ts-ignore
-      accessToken: response.accessToken,
+      accessToken: response.tokens.accessToken,
       // @ts-ignore
-      refreshToken: response.refreshToken,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 mins default
+      refreshToken: response.tokens.refreshToken,
+      expiresAt: new Date(Date.now() + (response.tokens.expiresIn || 900) * 1000).toISOString(),
     };
 
     this.saveSession(session);
@@ -75,7 +74,7 @@ export const authService = {
       password: dto.password
     });
 
-    // Backend returns { accessToken, refreshToken, user }
+    // Backend returns { user, tokens: { accessToken, refreshToken, expiresIn } }
     const session: AuthSession = {
       user: {
         id: response.user.id,
@@ -84,12 +83,12 @@ export const authService = {
         college: response.user.college,
         createdAt: response.user.createdAt,
       },
-      token: response.accessToken,
+      token: response.tokens.accessToken,
       // @ts-ignore
-      accessToken: response.accessToken,
+      accessToken: response.tokens.accessToken,
       // @ts-ignore
-      refreshToken: response.refreshToken,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      refreshToken: response.tokens.refreshToken,
+      expiresAt: new Date(Date.now() + (response.tokens.expiresIn || 900) * 1000).toISOString(),
     };
 
     this.saveSession(session);
