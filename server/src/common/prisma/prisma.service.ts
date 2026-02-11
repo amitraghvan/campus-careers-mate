@@ -6,6 +6,8 @@
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 @Injectable()
 export class PrismaService
@@ -26,13 +28,12 @@ export class PrismaService
       return;
     }
 
-    // Use standard TCP connection for Node.js environments (Render)
+    // Prisma 7: Use Adapter for dynamic connection configuration
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+
     super({
-      datasources: {
-        db: {
-          url: connectionString,
-        },
-      },
+      adapter,
     });
 
     this.logger = new Logger(PrismaService.name);
