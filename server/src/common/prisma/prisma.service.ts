@@ -1,6 +1,7 @@
 /**
  * Prisma Service — managed database connection lifecycle.
  * Uses @neondatabase/serverless + @prisma/adapter-neon for Neon PostgreSQL.
+ * Falls back to pg adapter for local development.
  */
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
@@ -21,13 +22,27 @@ export class PrismaService
   private readonly logger: Logger;
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL!;
+    const connectionString = process.env.DATABASE_URL;
+
+    if (!connectionString) {
+      // Log a clear error and use a dummy connection that will fail gracefully
+      console.error(
+        '❌ DATABASE_URL environment variable is not set! ' +
+        'Please set it in your environment (Render Dashboard → Environment tab).'
+      );
+      super();
+      this.logger = new Logger(PrismaService.name);
+      return;
+    }
+
     const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let options: any = {};
 
     if (!isLocal) {
       const pool = new NeonPool({ connectionString });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const adapter = new PrismaNeon(pool as any);
       options = { adapter };
     } else {
