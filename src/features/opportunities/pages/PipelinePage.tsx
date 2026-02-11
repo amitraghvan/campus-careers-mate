@@ -3,7 +3,7 @@
  * Features: Drag & Drop, Status History Tracking, Animated Transitions.
  */
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useOpportunityContext } from "@/features/opportunities/contexts/OpportunityContext";
 import { Opportunity, OpportunityStatus } from "@/types";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -19,7 +19,7 @@ import {
     MoreHorizontal,
 } from "lucide-react";
 
-const COLUMNS: { id: OpportunityStatus; title: string; icon: any; color: string }[] = [
+const COLUMNS: { id: OpportunityStatus; title: string; icon: React.ElementType; color: string }[] = [
     { id: "wishlist", title: "Wishlist", icon: Plus, color: "text-blue-500" },
     { id: "applied", title: "Applied", icon: ArrowUpRight, color: "text-purple-500" },
     { id: "interview", title: "Interview", icon: Clock, color: "text-yellow-500" },

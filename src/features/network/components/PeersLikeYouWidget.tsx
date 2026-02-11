@@ -1,13 +1,27 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Users, ArrowRight, UserPlus } from "lucide-react";
 import { peerService } from "@/features/network/services/peer.service";
+import { Peer } from "@/features/network/types/peer.types";
 
 export function PeersLikeYouWidget() {
     const navigate = useNavigate();
-    const peers = peerService.getPeers().slice(0, 3); // Show top 3
+    const [peers, setPeers] = useState<Peer[]>([]);
+
+    useEffect(() => {
+        const fetchPeers = async () => {
+            try {
+                const data = await peerService.getPeers();
+                setPeers(data.slice(0, 3));
+            } catch (error) {
+                console.error("Failed to load peers widget", error);
+            }
+        };
+        fetchPeers();
+    }, []);
 
     return (
         <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-primary/5">

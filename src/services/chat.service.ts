@@ -91,13 +91,14 @@ export const chatService = {
             const result = await chat.sendMessage(prompt);
             const response = result.response;
             return response.text();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("[Chat] Gemini API error:", error);
 
-            if (error?.message?.includes("API_KEY")) {
+            const message = error instanceof Error ? error.message : "";
+            if (message.includes("API_KEY")) {
                 return "⚠️ Invalid API key. Please check your VITE_GEMINI_API_KEY.";
             }
-            if (error?.message?.includes("quota")) {
+            if (message.includes("quota")) {
                 return "⚠️ API quota exceeded. Please try again later.";
             }
             return "Sorry, I couldn't process that. Please try again! 🔄";

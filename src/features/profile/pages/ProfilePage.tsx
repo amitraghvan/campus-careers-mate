@@ -12,11 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/features/auth/hooks";
+import type { AcademicProfile } from "@/features/auth/types";
 import { opportunityService } from "@/services";
 import { formatDate } from "@/utils/date";
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, updateProfile } = useAuth();
     const opportunities = opportunityService.getAll();
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(user?.name || "");
@@ -120,7 +121,7 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-muted-foreground">Degree & Branch</label>
                                 <Input
                                     value={user?.academic?.degree || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, degree: e.target.value } } as any)}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, degree: e.target.value } as AcademicProfile })}
                                     placeholder="e.g. B.Tech CSE"
                                 />
                             </div>
@@ -128,7 +129,7 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-muted-foreground">Current CGPA</label>
                                 <Input
                                     value={user?.academic?.currentCGPA || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, currentCGPA: e.target.value } } as any)}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, currentCGPA: e.target.value } as AcademicProfile })}
                                     placeholder="e.g. 8.5"
                                 />
                             </div>
@@ -136,7 +137,7 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-muted-foreground">12th Marks (%)</label>
                                 <Input
                                     value={user?.academic?.twelfthMarks || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, twelfthMarks: e.target.value } } as any)}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, twelfthMarks: e.target.value } as AcademicProfile })}
                                     placeholder="e.g. 92%"
                                 />
                             </div>
@@ -144,7 +145,7 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-muted-foreground">10th Marks (%)</label>
                                 <Input
                                     value={user?.academic?.tenthMarks || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, tenthMarks: e.target.value } } as any)}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, tenthMarks: e.target.value } as AcademicProfile })}
                                     placeholder="e.g. 95%"
                                 />
                             </div>
@@ -152,7 +153,7 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-muted-foreground">Backlogs</label>
                                 <Input
                                     value={user?.academic?.backlogs || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, backlogs: e.target.value } } as any)}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, backlogs: e.target.value } as AcademicProfile })}
                                     placeholder="0"
                                 />
                             </div>
@@ -160,7 +161,7 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-muted-foreground">Resume Actions</label>
                                 <Input
                                     value={user?.academic?.resumeLink || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, resumeLink: e.target.value } } as any)}
+                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, resumeLink: e.target.value } as AcademicProfile })}
                                     placeholder="Resume Drive Link"
                                 />
                             </div>

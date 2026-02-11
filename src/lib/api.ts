@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const API_PREFIX = "/api/v1";
 
 type RequestOptions = RequestInit & {
-    headers?: any;
+    headers?: Record<string, string>;
 };
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
@@ -22,11 +22,14 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         console.warn("Failed to retrieve token", e);
     }
 
-    const headers: any = {
+    const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
     };
+    // Merge in any extra headers from options
+    if (options.headers) {
+        Object.assign(headers, options.headers);
+    }
 
     const response = await fetch(url, {
         ...options,
@@ -53,11 +56,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 export const api = {
     request,
 
-    get<T>(endpoint: string, headers?: any) {
+    get<T>(endpoint: string, headers?: Record<string, string>) {
         return request<T>(endpoint, { method: "GET", headers });
     },
 
-    post<T>(endpoint: string, body: any, headers?: any) {
+    post<T>(endpoint: string, body: unknown, headers?: Record<string, string>) {
         return request<T>(endpoint, {
             method: "POST",
             body: JSON.stringify(body),
@@ -65,7 +68,7 @@ export const api = {
         });
     },
 
-    put<T>(endpoint: string, body: any, headers?: any) {
+    put<T>(endpoint: string, body: unknown, headers?: Record<string, string>) {
         return request<T>(endpoint, {
             method: "PUT",
             body: JSON.stringify(body),
@@ -73,7 +76,7 @@ export const api = {
         });
     },
 
-    patch<T>(endpoint: string, body: any, headers?: any) {
+    patch<T>(endpoint: string, body: unknown, headers?: Record<string, string>) {
         return request<T>(endpoint, {
             method: "PATCH",
             body: JSON.stringify(body),
@@ -81,7 +84,7 @@ export const api = {
         });
     },
 
-    delete<T>(endpoint: string, headers?: any) {
+    delete<T>(endpoint: string, headers?: Record<string, string>) {
         return request<T>(endpoint, { method: "DELETE", headers });
     },
 };

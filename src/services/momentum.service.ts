@@ -65,7 +65,7 @@ export const momentumService = {
     processDailyReset(state: MomentumState, today: string): MomentumState {
         // 1. Handle Streak
         const lastActivity = state.streak.lastActivityDate;
-        let newStreak = { ...state.streak };
+        const newStreak = { ...state.streak };
 
         if (lastActivity) {
             const daysDiff = this.getDaysDifference(lastActivity, today);
@@ -150,7 +150,7 @@ export const momentumService = {
 
     checkAchievements(state: MomentumState): MomentumState {
         const today = new Date().toISOString().split("T")[0];
-        let newStreak = { ...state.streak };
+        const newStreak = { ...state.streak };
         let newBadges = [...state.badges];
 
         // Check for daily activity (Goal OR Challenge)

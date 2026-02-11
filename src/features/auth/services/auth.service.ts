@@ -3,6 +3,21 @@ import { AUTH_STORAGE_KEY } from "@/features/auth/constants";
 import type { User, AuthSession, SignInDTO, SignUpDTO } from "@/features/auth/types";
 import { api } from "@/lib/api";
 
+interface AuthResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    college?: string;
+    createdAt: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn?: number;
+  };
+}
+
 export const authService = {
   /** Get current session */
   getSession(): AuthSession | null {
@@ -34,20 +49,15 @@ export const authService = {
 
   /** Sign up — create a new user */
   async signUp(dto: SignUpDTO): Promise<AuthSession> {
-    const response = await api.post<any>("/auth/signup", {
+    const response = await api.post<AuthResponse>("/auth/signup", {
       email: dto.email,
       password: dto.password,
       name: dto.name,
       college: dto.college
     });
 
-    // Create Profile automatically?
-    // My backend creates User. Profile creation is separate.
-    // I should create profile if needed, or rely on user doing it later.
-    // For now, return session.
-
     // Backend returns { user, tokens: { accessToken, refreshToken, expiresIn } }
-    const session: AuthSession = {
+    const session: AuthSession & { accessToken?: string; refreshToken?: string } = {
       user: {
         id: response.user.id,
         name: response.user.name,
@@ -56,9 +66,7 @@ export const authService = {
         createdAt: response.user.createdAt,
       },
       token: response.tokens.accessToken,
-      // @ts-ignore
       accessToken: response.tokens.accessToken,
-      // @ts-ignore
       refreshToken: response.tokens.refreshToken,
       expiresAt: new Date(Date.now() + (response.tokens.expiresIn || 900) * 1000).toISOString(),
     };
@@ -69,13 +77,13 @@ export const authService = {
 
   /** Sign in — authenticate an existing user */
   async signIn(dto: SignInDTO): Promise<AuthSession> {
-    const response = await api.post<any>("/auth/signin", {
+    const response = await api.post<AuthResponse>("/auth/signin", {
       email: dto.email,
       password: dto.password
     });
 
     // Backend returns { user, tokens: { accessToken, refreshToken, expiresIn } }
-    const session: AuthSession = {
+    const session: AuthSession & { accessToken?: string; refreshToken?: string } = {
       user: {
         id: response.user.id,
         name: response.user.name,
@@ -84,9 +92,7 @@ export const authService = {
         createdAt: response.user.createdAt,
       },
       token: response.tokens.accessToken,
-      // @ts-ignore
       accessToken: response.tokens.accessToken,
-      // @ts-ignore
       refreshToken: response.tokens.refreshToken,
       expiresAt: new Date(Date.now() + (response.tokens.expiresIn || 900) * 1000).toISOString(),
     };
@@ -99,8 +105,7 @@ export const authService = {
   async signOut(): Promise<void> {
     try {
       await api.post("/auth/signout", {});
-    } catch (e) { /* ignore */ }
+    } catch { /* ignore */ }
     this.clearSession();
   },
 };
-

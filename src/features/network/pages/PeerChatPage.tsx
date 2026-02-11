@@ -24,7 +24,7 @@ export default function PeerChatPage() {
             }
         };
         loadPeers();
-    }, []);
+    }, [selectedPeerId]);
 
     const activePeer = selectedPeerId ? peers.find(p => p.id === selectedPeerId) : null;
 

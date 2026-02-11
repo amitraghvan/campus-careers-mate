@@ -1,2 +1,2 @@
-export type { User, AuthSession, SignInDTO, SignUpDTO, AuthMode } from "./auth.types";
+export type { User, AuthSession, SignInDTO, SignUpDTO, AuthMode, AcademicProfile } from "./auth.types";
 
