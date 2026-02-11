@@ -117,7 +117,7 @@ Deployment: Vercel / Firebase
 
 # ⚙️ Installation
 
-git clone [https://github.com/yourusername/placetrack.git\](https://github.com/amitraghvan/campus-careers-mate.git) cd placetrack
+git clone https://github.com/amitraghvan/campus-careers-mate.git cd placetrack
 npm install
 npm run dev
 
