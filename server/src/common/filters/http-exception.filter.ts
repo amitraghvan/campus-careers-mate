@@ -52,11 +52,39 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
       }
     } else if (exception instanceof Error) {
-      message = exception.message;
+      // Log the full error server-side for debugging
       this.logger.error(
         `Unhandled exception: ${exception.message}`,
         exception.stack,
       );
+
+      // Detect Prisma errors and return user-friendly messages
+      const errorName = exception.constructor?.name || '';
+      if (errorName.includes('PrismaClient')) {
+        // PrismaClientKnownRequestError, PrismaClientInitializationError,
+        // PrismaClientValidationError, PrismaClientUnknownRequestError
+        if (errorName === 'PrismaClientInitializationError') {
+          status = HttpStatus.SERVICE_UNAVAILABLE;
+          message = 'Database connection failed. Please try again later.';
+          error = 'Service Unavailable';
+        } else if (errorName === 'PrismaClientKnownRequestError') {
+          status = HttpStatus.BAD_REQUEST;
+          message = 'A database error occurred. Please check your request.';
+          error = 'Bad Request';
+        } else {
+          status = HttpStatus.INTERNAL_SERVER_ERROR;
+          message = 'An unexpected database error occurred. Please try again later.';
+          error = 'Internal Server Error';
+        }
+      } else {
+        // For any other unhandled errors, return a generic message
+        // NEVER leak raw error messages to the client
+        message = 'An unexpected error occurred. Please try again later.';
+      }
+    } else {
+      // Non-Error exceptions (strings, objects, etc.)
+      this.logger.error(`Unhandled non-Error exception: ${JSON.stringify(exception)}`);
+      message = 'An unexpected error occurred. Please try again later.';
     }
 
     const errorResponse: ErrorResponse = {

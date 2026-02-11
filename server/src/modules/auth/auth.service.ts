@@ -11,6 +11,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  InternalServerErrorException,
   Logger,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
@@ -58,27 +59,21 @@ export class AuthService {
   // ── Sign Up ────────────────────────────────────
 
   async signUp(dto: SignUpDto, userAgent?: string, ip?: string): Promise<AuthResponse> {
-    console.log("DEBUG: AuthService.signUp called with email:", dto.email);
     try {
       const emailLower = dto.email.toLowerCase().trim();
 
-      console.log("DEBUG: Before findUnique");
       // Check for duplicate
       const existing = await this.prisma.user.findUnique({
         where: { email: emailLower },
       });
-      console.log("DEBUG: After findUnique, existing:", !!existing);
       if (existing) {
         throw new ConflictException("An account with this email already exists");
       }
 
-      console.log("DEBUG: Before bcrypt");
       // Hash password
       const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-      console.log("DEBUG: After bcrypt");
 
-      console.log("DEBUG: Before user.create");
-      // Create user in transaction
+      // Create user
       const user = await this.prisma.user.create({
         data: {
           email: emailLower,
@@ -95,67 +90,89 @@ export class AuthService {
           avatarUrl: true,
         },
       });
-      console.log("DEBUG: User created:", user.id);
 
-      console.log("DEBUG: Before generateTokenPair");
       // Generate tokens
       const tokens = await this.generateTokenPair(user.id, user.email, user.role, userAgent, ip);
-      console.log("DEBUG: After generateTokenPair");
 
       this.logger.log(`New user registered: ${user.email}`);
 
       return { user, tokens };
     } catch (error) {
-      console.error("DEBUG: AuthService.signUp failed:");
-      console.error("DEBUG: Error Type:", error?.constructor?.name);
-      console.error("DEBUG: Error Keys:", Object.keys(error as any));
-      console.error("DEBUG: Error String:", String(error));
-      console.error("DEBUG: Error JSON:", JSON.stringify(error, null, 2));
-      throw error;
+      // Re-throw NestJS HTTP exceptions as-is (ConflictException, etc.)
+      if (error instanceof ConflictException || error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      // Log the actual error server-side
+      this.logger.error(
+        `Sign-up failed for ${dto.email}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      // Return a user-friendly error
+      throw new InternalServerErrorException(
+        'Unable to create account. Please try again later.',
+      );
     }
   }
 
   // ── Sign In ────────────────────────────────────
 
   async signIn(dto: SignInDto, userAgent?: string, ip?: string): Promise<AuthResponse> {
-    const emailLower = dto.email.toLowerCase().trim();
+    try {
+      const emailLower = dto.email.toLowerCase().trim();
 
-    const user = await this.prisma.user.findUnique({
-      where: { email: emailLower },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        college: true,
-        avatarUrl: true,
-        passwordHash: true,
-        isActive: true,
-      },
-    });
+      const user = await this.prisma.user.findUnique({
+        where: { email: emailLower },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          college: true,
+          avatarUrl: true,
+          passwordHash: true,
+          isActive: true,
+        },
+      });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException("Invalid email or password");
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException("Invalid email or password");
+      }
+
+      const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
+      if (!passwordValid) {
+        throw new UnauthorizedException("Invalid email or password");
+      }
+
+      // Update last login
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+
+      const tokens = await this.generateTokenPair(user.id, user.email, user.role, userAgent, ip);
+
+      this.logger.log(`User signed in: ${user.email}`);
+
+      // Omit passwordHash from response
+      const { passwordHash: _, ...safeUser } = user;
+      return { user: safeUser, tokens };
+    } catch (error) {
+      // Re-throw NestJS HTTP exceptions as-is
+      if (error instanceof UnauthorizedException || error instanceof ConflictException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Sign-in failed for ${dto.email}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      throw new InternalServerErrorException(
+        'Unable to sign in. Please try again later.',
+      );
     }
-
-    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!passwordValid) {
-      throw new UnauthorizedException("Invalid email or password");
-    }
-
-    // Update last login
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    const tokens = await this.generateTokenPair(user.id, user.email, user.role, userAgent, ip);
-
-    this.logger.log(`User signed in: ${user.email}`);
-
-    // Omit passwordHash from response
-    const { passwordHash: _, ...safeUser } = user;
-    return { user: safeUser, tokens };
   }
 
   // ── Refresh Token ──────────────────────────────
