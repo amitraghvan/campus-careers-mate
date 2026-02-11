@@ -28,7 +28,8 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   const port = config.get<number>("PORT", 3000);
-  const prefix = config.get<string>("API_PREFIX", "api");
+  const rawPrefix = config.get<string>("API_PREFIX", "api");
+  const prefix = rawPrefix.endsWith("/v1") ? rawPrefix.replace(/\/v1$/, "") : rawPrefix;
   const corsOrigin = config.get<string>("CORS_ORIGIN", "http://localhost:8080");
 
   // ── Security ────────────────────────────────────
