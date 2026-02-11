@@ -20,6 +20,8 @@ import { UsersModule } from "./modules/users/users.module";
 import { OpportunitiesModule } from "./modules/opportunities/opportunities.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { NotesModule } from "./modules/notes/notes.module";
+import { PeerModule } from './modules/peer/peer.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { NotesModule } from "./modules/notes/notes.module";
     OpportunitiesModule,
     DashboardModule,
     NotesModule,
+    PeerModule,
+    ChatModule,
   ],
   providers: [
     // Global rate-limit guard
@@ -63,5 +67,5 @@ import { NotesModule } from "./modules/notes/notes.module";
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
 
