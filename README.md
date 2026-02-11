@@ -110,8 +110,8 @@ Track stages: - Wishlist
 # 🏗️ Tech Stack
 
 Frontend: React.js / Next.js, Tailwind CSS\
-Backend: Firebase / Supabase\
-Deployment: Vercel / Firebase
+Backend: Render
+Deployment: Vercel 
 
 ------------------------------------------------------------------------
 
