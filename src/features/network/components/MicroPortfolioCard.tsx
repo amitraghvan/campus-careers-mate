@@ -7,7 +7,7 @@ import { UserPlus, MessageSquare, Clock, Check } from "lucide-react";
 
 interface MicroPortfolioCardProps {
     peer: Peer;
-    onConnect?: (id: string) => void;
+    onConnect?: (id: string, requestId?: string) => void;
     onChat?: (id: string) => void;
 }
 
@@ -74,7 +74,7 @@ export function MicroPortfolioCard({ peer, onConnect, onChat }: MicroPortfolioCa
                         <Button
                             className="w-full gap-2"
                             variant="default"
-                            onClick={() => onConnect?.(peer.id)}
+                            onClick={() => onConnect?.(peer.id, peer.requestId)}
                         >
                             <Check className="h-4 w-4" /> Accept Request
                         </Button>

@@ -1,11 +1,27 @@
 import { Peer, ChatMessage, ChatThread } from "../types/peer.types";
 import { api } from "@/lib/api";
 
+// Module-level cache for getPeerById lookups
+let peerCache: Peer[] = [];
+
+// Helper to generate initials from a name (e.g. "John Doe" -> "JD")
+const getInitials = (name: string): string => {
+    if (!name || name === "Unknown") return "??";
+    return name
+        .split(" ")
+        .filter(Boolean)
+        .map(part => part[0].toUpperCase())
+        .slice(0, 2)
+        .join("");
+};
+
 // Backend response types
 interface BackendProfile {
     userId?: string;
     id?: string;
-    user?: { name?: string; avatarUrl?: string };
+    user?: { id?: string; name?: string; avatarUrl?: string };
+    name?: string;
+    avatarUrl?: string;
     college?: string;
     headline?: string;
     targetJobRoles?: string[];
@@ -38,19 +54,22 @@ interface BackendMessage {
 }
 
 // Helper to map backend profile/user to frontend Peer
-const mapProfileToPeer = (p: BackendProfile, status: Peer['status'] = "CONNECT"): Peer => ({
-    id: p.userId || p.id || "", // Prefer userId
-    name: p.user?.name || "Unknown",
-    avatar: p.user?.avatarUrl || "AV",
-    degree: "Student", // Default
-    college: p.college || "Unknown",
-    batch: "2025",
-    targetRoles: p.targetJobRoles || [],
-    skills: [],
-    bio: p.headline || "",
-    status,
-    isOnline: false
-});
+const mapProfileToPeer = (p: BackendProfile, status: Peer['status'] = "CONNECT"): Peer => {
+    const name = p.user?.name || p.name || "Unknown";
+    return {
+        id: p.userId || p.user?.id || p.id || "",
+        name,
+        avatar: getInitials(name),
+        degree: "Student",
+        college: p.college || "Unknown",
+        batch: "2025",
+        targetRoles: p.targetJobRoles || [],
+        skills: [],
+        bio: p.headline || "",
+        status,
+        isOnline: false
+    };
+};
 
 export const peerService = {
     async getPeers(): Promise<Peer[]> {
@@ -80,7 +99,7 @@ export const peerService = {
                     peers.push({
                         id: other.id,
                         name: other.name,
-                        avatar: other.avatarUrl || "AV",
+                        avatar: getInitials(other.name),
                         degree: "Student",
                         college: other.college || "Unknown",
                         batch: "2025",
@@ -100,19 +119,21 @@ export const peerService = {
                     peers.push({
                         id: requester.id,
                         name: requester.name,
-                        avatar: requester.avatarUrl || "AV",
+                        avatar: getInitials(requester.name),
                         degree: "Student",
                         college: requester.college || "Unknown",
                         batch: "2025",
                         targetRoles: [],
                         skills: [],
                         bio: "Incoming Request",
-                        status: "PENDING", // This means "I can accept"
-                        requestId: c.id // Critical for accept/reject
+                        status: "PENDING",
+                        requestId: c.id
                     });
                 }
             });
 
+            // Update the module-level cache
+            peerCache = peers;
             return peers;
         } catch (e) {
             console.error("Failed to fetch peers", e);
@@ -121,11 +142,7 @@ export const peerService = {
     },
 
     getPeerById(id: string): Peer | undefined {
-        // This is synchronous in generic definition but we can't implement it properly if we don't have cache.
-        // Frontend calls this. I should ideally cache `getPeers` result or change frontend to async.
-        // For now, returning undefined might break UI.
-        // I will rely on `getPeers` being called first.
-        return undefined;
+        return peerCache.find(p => p.id === id);
     },
 
     async sendConnectionRequest(userId: string) {

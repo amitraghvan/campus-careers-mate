@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Users, ArrowRight, UserPlus } from "lucide-react";
+import { Users, ArrowRight, UserPlus, Clock } from "lucide-react";
 import { peerService } from "@/features/network/services/peer.service";
 import { Peer } from "@/features/network/types/peer.types";
 
 export function PeersLikeYouWidget() {
     const navigate = useNavigate();
     const [peers, setPeers] = useState<Peer[]>([]);
+    const [connecting, setConnecting] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         const fetchPeers = async () => {
@@ -62,8 +63,30 @@ export function PeersLikeYouWidget() {
                                     </span>
                                 ))}
                             </div>
-                            <Button size="sm" variant="outline" className="w-full text-xs h-7 gap-1">
-                                <UserPlus className="h-3 w-3" /> Connect
+                            <Button
+                                size="sm"
+                                variant={connecting.has(peer.id) ? "default" : "outline"}
+                                className="w-full text-xs h-7 gap-1"
+                                disabled={connecting.has(peer.id) || peer.status === "CONNECTED"}
+                                onClick={async () => {
+                                    setConnecting(prev => new Set(prev).add(peer.id));
+                                    try {
+                                        await peerService.sendConnectionRequest(peer.id);
+                                    } catch (e) {
+                                        console.error("Connect failed", e);
+                                        setConnecting(prev => {
+                                            const next = new Set(prev);
+                                            next.delete(peer.id);
+                                            return next;
+                                        });
+                                    }
+                                }}
+                            >
+                                {connecting.has(peer.id) ? (
+                                    <><Clock className="h-3 w-3" /> Sent</>
+                                ) : (
+                                    <><UserPlus className="h-3 w-3" /> Connect</>
+                                )}
                             </Button>
                         </div>
                     </div>

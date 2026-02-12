@@ -73,9 +73,7 @@ export default function PeerDiscoveryPage() {
     };
 
     const handleChat = (id: string) => {
-        // Navigate to chat or open chat widget
-        // For now, we'll just log or show an alert (in a real app, this goes to /network/chat/:id)
-        console.log("Open chat with", id);
+        navigate("/network/chat");
     };
 
     const filteredPeers = peers.filter(peer => {
