@@ -21,7 +21,9 @@ export interface ChatMessage {
     senderId: string;
     text: string;
     timestamp: string;
-    read: boolean;
+    rawDate: string; // for grouping
+    isRead: boolean;
+    isSent: boolean; // false = sending, true = backend received
 }
 
 export interface ChatThread {

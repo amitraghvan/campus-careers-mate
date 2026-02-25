@@ -80,6 +80,20 @@ export class ChatService {
         return messages.reverse(); // Return chronological
     }
 
+    async markAsRead(userId: string, conversationId: string) {
+        // Find unread messages where the current user is NOT the sender
+        return this.prisma.message.updateMany({
+            where: {
+                conversationId,
+                senderId: { not: userId },
+                readAt: null,
+            },
+            data: {
+                readAt: new Date(),
+            },
+        });
+    }
+
     async validateMembership(userId: string, conversationId: string): Promise<boolean> {
         const conversation = await this.prisma.conversation.findUnique({
             where: { id: conversationId },

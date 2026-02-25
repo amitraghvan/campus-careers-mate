@@ -163,12 +163,14 @@ export const peerService = {
             const myId = session ? JSON.parse(session).user.id : "";
 
             const messages = await api.get<BackendMessage[]>(`/chats/${conversationId}/messages`);
-            return messages.map(m => ({
+            return messages.map((m) => ({
                 id: m.id,
                 senderId: m.senderId === myId ? "me" : m.senderId,
                 text: m.content,
                 timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                read: true
+                rawDate: new Date(m.createdAt).toISOString(),
+                isRead: true, // we assume existing history is read for now
+                isSent: true,
             }));
         } catch (e) {
             console.error("Failed to get chat", e);
@@ -190,7 +192,9 @@ export const peerService = {
             senderId: "me",
             text,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            read: true
+            rawDate: new Date().toISOString(),
+            isRead: false,
+            isSent: true,
         };
     }
 };
