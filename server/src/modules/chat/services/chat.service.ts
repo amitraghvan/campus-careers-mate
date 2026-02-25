@@ -18,14 +18,9 @@ export class ChatService {
         }
 
         // Transaction: Create message + Update conversation timestamp
-        // Using transaction ensures consistency
         const [message, updatedConversation] = await this.prisma.$transaction([
             this.prisma.message.create({
-                data: {
-                    senderId,
-                    conversationId,
-                    content,
-                },
+                data: { senderId, conversationId, content },
                 include: {
                     sender: { select: { id: true, name: true, avatarUrl: true } }
                 }
@@ -43,6 +38,21 @@ export class ChatService {
 
         return { message, recipientId };
     }
+
+    /**
+     * Get or create a conversation between two users.
+     * IDs are sorted so {A,B} and {B,A} always resolve to the same row.
+     */
+    async getOrCreateConversation(userAId: string, userBId: string) {
+        const [p1, p2] = [userAId, userBId].sort();
+        return this.prisma.conversation.upsert({
+            where: { participantOneId_participantTwoId: { participantOneId: p1, participantTwoId: p2 } },
+            create: { participantOneId: p1, participantTwoId: p2 },
+            update: {},
+        });
+    }
+
+
 
     async getMessages(userId: string, conversationId: string, limit = 50, cursor?: string) {
         // Validate membership

@@ -32,48 +32,36 @@ export default function PeerDiscoveryPage() {
         }
     };
 
-    const handleConnect = async (id: string, requestId?: string) => { // Updated signature
+    const handleConnect = async (id: string, requestId?: string) => {
+        // Capture peer state BEFORE any optimistic updates
+        const peer = peers.find(p => p.id === id);
+
         // Optimistic update
         setPeers(current => current.map(p =>
             p.id === id ? { ...p, status: "PENDING" } : p
         ));
 
         try {
-            // Check if it's accept or request
-            // For discovery, it is usually Request.
-            // But if status was PENDING (incoming), it means Accept.
-            // MicroPortfolioCard might need to distinguish.
-            // For now, assume "Connect" button means "Send Request".
-            // If the user is in "Incoming Request" state, the button should say "Accept".
-            // I need to check peer status.
-            const peer = peers.find(p => p.id === id);
             if (peer?.status === "PENDING" && peer.requestId) {
-                // It's an incoming request, so ACCEPT it.
-                // Wait, if status is PENDING, MicroPortfolioCard might show "Pending" (disabled).
-                // But my service returns PENDING for incoming requests too.
-                // I need to distinguish "Incoming Pending" vs "Outgoing Pending".
-                // My `getPeers` mapping:
-                // Incoming -> status: PENDING, requestId: ...
-                // Outgoing -> status: PENDING (but I didn't map outgoing requests in getPeers! I only mapped connections and incoming).
-                // I should map outgoing requests too if I want to show them.
-                // For now, if requestId exists, it is incoming -> Accept.
+                // Incoming request → Accept it
                 await peerService.acceptConnectionRequest(peer.requestId);
                 setPeers(current => current.map(p =>
                     p.id === id ? { ...p, status: "CONNECTED" } : p
                 ));
             } else {
-                // Send Request
+                // Send a new connection request
                 await peerService.sendConnectionRequest(id);
             }
         } catch (error) {
-            console.error("Action failed", error);
-            // Revert
+            const err = error as { message?: string };
+            console.error("Peer connect action failed:", err?.message || error);
+            // Revert optimistic update on failure
             loadPeers();
         }
     };
 
     const handleChat = (id: string) => {
-        navigate("/network/chat");
+        navigate("/network/chat", { state: { peerId: id } });
     };
 
     const filteredPeers = peers.filter(peer => {

@@ -155,18 +155,14 @@ export const peerService = {
 
     async getChatHistory(peerId: string): Promise<ChatMessage[]> {
         try {
-            const conversations = await api.get<BackendConversation[]>('/chats');
+            // Get or create conversation for this peer
+            const conv = await api.post<{ id: string }>(`/chats/conversation/${peerId}`, {});
+            const conversationId = conv.id;
+
             const session = localStorage.getItem("placement-tracker-auth");
             const myId = session ? JSON.parse(session).user.id : "";
 
-            const conv = conversations.find(c =>
-                (c.participantOneId === myId && c.participantTwoId === peerId) ||
-                (c.participantTwoId === myId && c.participantOneId === peerId)
-            );
-
-            if (!conv) return [];
-
-            const messages = await api.get<BackendMessage[]>(`/chats/${conv.id}/messages`);
+            const messages = await api.get<BackendMessage[]>(`/chats/${conversationId}/messages`);
             return messages.map(m => ({
                 id: m.id,
                 senderId: m.senderId === myId ? "me" : m.senderId,
@@ -181,26 +177,19 @@ export const peerService = {
     },
 
     async sendMessage(peerId: string, text: string): Promise<ChatMessage> {
-        const conversations = await api.get<BackendConversation[]>('/chats');
-        const session = localStorage.getItem("placement-tracker-auth");
-        const myId = session ? JSON.parse(session).user.id : "";
+        // Always get-or-create the conversation first (works even before connection accepted)
+        const conv = await api.post<{ id: string }>(`/chats/conversation/${peerId}`, {});
+        const conversationId = conv.id;
 
-        const conv = conversations.find(c =>
-            (c.participantOneId === myId && c.participantTwoId === peerId) ||
-            (c.participantTwoId === myId && c.participantOneId === peerId)
-        );
-
-        if (!conv) throw new Error("Conversation not found");
-
-        await api.post<BackendMessage>(`/chats/${conv.id}/messages`, {
+        await api.post<BackendMessage>(`/chats/${conversationId}/messages`, {
             content: text
         });
 
         return {
-            id: "temp",
+            id: `temp-${Date.now()}`,
             senderId: "me",
             text,
-            timestamp: "Just now",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             read: true
         };
     }

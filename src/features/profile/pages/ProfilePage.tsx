@@ -2,12 +2,12 @@
  * Profile Page — user profile, stats, and data management.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
     User, Mail, GraduationCap, Calendar, Award, Target,
     TrendingUp, Download, RotateCcw, CheckCircle2, BarChart3,
-    Shield, Briefcase,
+    Shield, Briefcase, BookOpen, Code2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,65 @@ export default function ProfilePage() {
     const { user, updateProfile } = useAuth();
     const opportunities = opportunityService.getAll();
     const [isEditing, setIsEditing] = useState(false);
-    const [name, setName] = useState(user?.name || "");
-    const [college, setCollege] = useState(user?.college || "");
+
+    // Local state for form fields
+    const [formData, setFormData] = useState({
+        name: user?.name || "",
+        college: user?.college || "",
+        academic: user?.academic || {
+            degree: "",
+            branch: "",
+            currentCGPA: "",
+            twelfthMarks: "",
+            tenthMarks: "",
+            backlogs: "",
+            skills: "",
+            resumeLink: ""
+        }
+    });
+
+    // Update local state when user data loads/changes
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name || "",
+                college: user.college || "",
+                academic: user.academic || {
+                    degree: "",
+                    branch: "",
+                    currentCGPA: "",
+                    twelfthMarks: "",
+                    tenthMarks: "",
+                    backlogs: "",
+                    skills: "",
+                    resumeLink: ""
+                }
+            });
+        }
+    }, [user]);
+
+    const handleAcademicChange = (field: keyof AcademicProfile, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            academic: {
+                ...prev.academic,
+                [field]: value
+            }
+        }));
+    };
+
+    const handleSave = async () => {
+        try {
+            await updateProfile({
+                name: formData.name,
+                college: formData.college,
+                academic: formData.academic
+            });
+            setIsEditing(false);
+        } catch (error) {
+            console.error("Failed to update profile", error);
+        }
+    };
 
     // Calculate stats
     const totalApps = opportunities.length;
@@ -104,11 +161,11 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/30 animate-in fade-in slide-in-from-top-2">
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">Full Name</label>
-                                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" />
+                                <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Full Name" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">College</label>
-                                <Input value={college} onChange={(e) => setCollege(e.target.value)} placeholder="College Name" />
+                                <Input value={formData.college} onChange={(e) => setFormData({ ...formData, college: e.target.value })} placeholder="College Name" />
                             </div>
 
                             <div className="col-span-full border-t border-border/30 my-2" />
@@ -118,60 +175,73 @@ export default function ProfilePage() {
                             </h3>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-medium text-muted-foreground">Degree & Branch</label>
+                                <label className="text-xs font-medium text-muted-foreground">Degree</label>
                                 <Input
-                                    value={user?.academic?.degree || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, degree: e.target.value } as AcademicProfile })}
-                                    placeholder="e.g. B.Tech CSE"
+                                    value={formData.academic?.degree || ""}
+                                    onChange={(e) => handleAcademicChange('degree', e.target.value)}
+                                    placeholder="e.g. B.Tech"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Branch</label>
+                                <Input
+                                    value={formData.academic?.branch || ""}
+                                    onChange={(e) => handleAcademicChange('branch', e.target.value)}
+                                    placeholder="e.g. CSE"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">Current CGPA</label>
                                 <Input
-                                    value={user?.academic?.currentCGPA || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, currentCGPA: e.target.value } as AcademicProfile })}
+                                    value={formData.academic?.currentCGPA || ""}
+                                    onChange={(e) => handleAcademicChange('currentCGPA', e.target.value)}
                                     placeholder="e.g. 8.5"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">12th Marks (%)</label>
                                 <Input
-                                    value={user?.academic?.twelfthMarks || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, twelfthMarks: e.target.value } as AcademicProfile })}
+                                    value={formData.academic?.twelfthMarks || ""}
+                                    onChange={(e) => handleAcademicChange('twelfthMarks', e.target.value)}
                                     placeholder="e.g. 92%"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">10th Marks (%)</label>
                                 <Input
-                                    value={user?.academic?.tenthMarks || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, tenthMarks: e.target.value } as AcademicProfile })}
+                                    value={formData.academic?.tenthMarks || ""}
+                                    onChange={(e) => handleAcademicChange('tenthMarks', e.target.value)}
                                     placeholder="e.g. 95%"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">Backlogs</label>
                                 <Input
-                                    value={user?.academic?.backlogs || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, backlogs: e.target.value } as AcademicProfile })}
+                                    value={formData.academic?.backlogs || ""}
+                                    onChange={(e) => handleAcademicChange('backlogs', e.target.value)}
                                     placeholder="0"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-muted-foreground">Skills (Comma separated)</label>
+                                <Input
+                                    value={formData.academic?.skills || ""}
+                                    onChange={(e) => handleAcademicChange('skills', e.target.value)}
+                                    placeholder="e.g. React, Node.js, Python"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-muted-foreground">Resume Actions</label>
                                 <Input
-                                    value={user?.academic?.resumeLink || ""}
-                                    onChange={(e) => updateProfile({ academic: { ...user?.academic, resumeLink: e.target.value } as AcademicProfile })}
+                                    value={formData.academic?.resumeLink || ""}
+                                    onChange={(e) => handleAcademicChange('resumeLink', e.target.value)}
                                     placeholder="Resume Drive Link"
                                 />
                             </div>
 
                             <div className="col-span-full pt-4 flex justify-end gap-2">
                                 <Button
-                                    onClick={async () => {
-                                        await updateProfile({ name, college });
-                                        setIsEditing(false);
-                                    }}
+                                    onClick={handleSave}
                                 >
                                     Save Changes
                                 </Button>
@@ -184,8 +254,16 @@ export default function ProfilePage() {
                                 <p className="font-semibold">{user?.academic?.degree || "Not set"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <p className="text-xs text-muted-foreground">Branch</p>
+                                <p className="font-semibold">{user?.academic?.branch || "Not set"}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">CGPA</p>
                                 <p className="font-semibold">{user?.academic?.currentCGPA || "N/A"}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <p className="text-xs text-muted-foreground">Skills</p>
+                                <p className="font-semibold truncate" title={user?.academic?.skills}>{user?.academic?.skills || "None"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">12th Grade</p>

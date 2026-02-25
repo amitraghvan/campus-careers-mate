@@ -8,10 +8,10 @@ export class PeerDiscoveryService {
     constructor(private prisma: PrismaService) { }
 
     async discoverPeers(currentUserId: string, query: PeerDiscoveryQueryDto) {
-        const { college, role, page = 1, limit = 10 } = query;
+        const { college, role, page = 1, limit = 50 } = query;
         const skip = (page - 1) * limit;
 
-        // 1. Get blocked users to exclude
+        // 1. Get blocked user IDs to exclude
         const blockedConnections = await this.prisma.peerConnection.findMany({
             where: {
                 OR: [
@@ -27,35 +27,62 @@ export class PeerDiscoveryService {
         );
         const excludeIds = [currentUserId, ...blockedUserIds];
 
-        // 2. Build filter
-        const where: any = {
-            userId: { notIn: excludeIds },
+        // 2. Fetch ALL users except self and blocked
+        const userWhere: Record<string, unknown> = {
+            id: { notIn: excludeIds },
         };
 
-        if (college) {
-            where.college = { contains: college, mode: 'insensitive' };
-        }
-
-        if (role) {
-            where.targetJobRoles = { has: role };
-        }
-
-        // 3. Fetch profiles
-        const [profiles, total] = await Promise.all([
-            this.prisma.peerProfile.findMany({
-                where,
-                include: {
-                    user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        const [users, total] = await Promise.all([
+            this.prisma.user.findMany({
+                where: userWhere,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                    college: true,
+                    peerProfile: {
+                        select: {
+                            college: true,
+                            headline: true,
+                            targetJobRoles: true,
+                            placementStage: true,
+                        },
+                    },
                 },
                 skip,
                 take: limit,
-                orderBy: { updatedAt: 'desc' },
+                orderBy: { name: 'asc' },
             }),
-            this.prisma.peerProfile.count({ where }),
+            this.prisma.user.count({ where: userWhere }),
         ]);
 
+        // 3. Filter by college / role if query params provided (applied after fetch for simplicity)
+        let filtered = users;
+        if (college) {
+            filtered = filtered.filter(u =>
+                (u.peerProfile?.college || u.college || '').toLowerCase().includes(college.toLowerCase())
+            );
+        }
+        if (role) {
+            filtered = filtered.filter(u =>
+                u.peerProfile?.targetJobRoles?.some(r => r.toLowerCase().includes(role.toLowerCase()))
+            );
+        }
+
+        // 4. Map to a consistent shape the frontend expects
+        const data = filtered.map((u) => ({
+            userId: u.id,
+            id: u.id,
+            user: { id: u.id, name: u.name, avatarUrl: u.avatarUrl },
+            name: u.name,
+            college: u.peerProfile?.college || u.college || 'Unknown',
+            headline: u.peerProfile?.headline || '',
+            targetJobRoles: u.peerProfile?.targetJobRoles || [],
+        }));
+
         return {
-            data: profiles,
+            data,
             meta: {
                 total,
                 page,

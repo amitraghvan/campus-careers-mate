@@ -5,6 +5,8 @@
 import { BadRequestException } from "@nestjs/common";
 import { validateStatusTransition } from "./status-machine";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // Note: these tests depend on @prisma/client types being generated.
 // Use string literals as enum values for test isolation.
 

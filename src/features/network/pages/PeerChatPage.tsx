@@ -1,60 +1,95 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { peerService } from "../services/peer.service";
 import { Peer, ChatMessage } from "../types/peer.types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, MoreVertical, Phone, Video } from "lucide-react";
+import { Send, MoreVertical, Phone, Video, MessageSquareDashed } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function PeerChatPage() {
+    const location = useLocation();
+    const state = location.state as { peerId?: string } | null;
+    const initialPeerId: string | undefined = state?.peerId;
+
     const [peers, setPeers] = useState<Peer[]>([]);
-    const [selectedPeerId, setSelectedPeerId] = useState<string | null>(null);
+    const [selectedPeerId, setSelectedPeerId] = useState<string | null>(initialPeerId ?? null);
     const [messageText, setMessageText] = useState("");
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+    const [sending, setSending] = useState(false);
+    const bottomRef = useRef<HTMLDivElement>(null);
 
+    // Load ALL peers (not just connected) so anyone can be messaged
     useEffect(() => {
         const loadPeers = async () => {
             const allPeers = await peerService.getPeers();
-            const connected = allPeers.filter(p => p.status === "CONNECTED");
-            setPeers(connected);
-            if (connected.length > 0 && !selectedPeerId) {
-                setSelectedPeerId(connected[0].id);
+            setPeers(allPeers);
+            // Auto-select first peer if none chosen
+            if (!selectedPeerId && allPeers.length > 0) {
+                setSelectedPeerId(allPeers[0].id);
             }
         };
         loadPeers();
-    }, [selectedPeerId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // run once on mount only
 
     const activePeer = selectedPeerId ? peers.find(p => p.id === selectedPeerId) : null;
 
+    // Load chat history whenever selected peer changes
     useEffect(() => {
-        if (selectedPeerId) {
-            peerService.getChatHistory(selectedPeerId).then(setChatHistory);
-        }
+        if (!selectedPeerId) return;
+        setChatHistory([]);
+        peerService.getChatHistory(selectedPeerId).then(setChatHistory);
     }, [selectedPeerId]);
+
+    // Scroll to bottom when new messages arrive
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [chatHistory]);
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!messageText.trim() || !selectedPeerId) return;
+        if (!messageText.trim() || !selectedPeerId || sending) return;
+        const text = messageText.trim();
+        setMessageText("");
+        setSending(true);
+
+        // Optimistic update
+        const optimistic: ChatMessage = {
+            id: `opt-${Date.now()}`,
+            senderId: "me",
+            text,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            read: false,
+        };
+        setChatHistory(prev => [...prev, optimistic]);
 
         try {
-            const newMsg = await peerService.sendMessage(selectedPeerId, messageText);
-            setChatHistory(prev => [...prev, newMsg]);
-            setMessageText("");
-        } catch (e) {
-            console.error("Failed to send", e);
+            await peerService.sendMessage(selectedPeerId, text);
+        } catch (err) {
+            console.error("Failed to send message:", err);
+            // Revert optimistic message on failure
+            setChatHistory(prev => prev.filter(m => m.id !== optimistic.id));
+            setMessageText(text); // restore text
+        } finally {
+            setSending(false);
         }
     };
 
     return (
         <div className="h-[calc(100vh-140px)] flex border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
-            {/* Sidebar */}
+            {/* Sidebar — all peers */}
             <div className="w-80 border-r border-border/50 flex flex-col bg-secondary/5">
                 <div className="p-4 border-b border-border/50">
                     <h2 className="font-semibold">Messages</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Message anyone on the platform</p>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                    {peers.length === 0 && (
+                        <p className="text-xs text-center text-muted-foreground py-8">No users found</p>
+                    )}
                     {peers.map(peer => (
                         <button
                             key={peer.id}
@@ -75,10 +110,16 @@ export default function PeerChatPage() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-baseline">
                                     <span className="font-medium truncate">{peer.name}</span>
-                                    {/* Mock timestamp */}
-                                    <span className="text-[10px] text-muted-foreground opacity-70">10:30 AM</span>
+                                    <span className={cn(
+                                        "text-[10px] px-1.5 py-0.5 rounded-full font-medium ml-1 shrink-0",
+                                        peer.status === "CONNECTED"
+                                            ? "bg-green-500/10 text-green-400"
+                                            : "bg-secondary text-muted-foreground"
+                                    )}>
+                                        {peer.status === "CONNECTED" ? "Connected" : peer.status === "PENDING" ? "Pending" : ""}
+                                    </span>
                                 </div>
-                                <p className="text-xs text-muted-foreground truncate">{peer.bio}</p>
+                                <p className="text-xs text-muted-foreground truncate">{peer.college}</p>
                             </div>
                         </button>
                     ))}
@@ -98,13 +139,10 @@ export default function PeerChatPage() {
                                 <div>
                                     <h3 className="font-semibold text-sm leading-none">{activePeer.name}</h3>
                                     <span className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                                        {activePeer.isOnline ? (
-                                            <>
-                                                <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> Online
-                                            </>
-                                        ) : "Offline"}
-                                        <span className="text-border">|</span>
-                                        {activePeer.degree} @ {activePeer.college}
+                                        {activePeer.college}
+                                        {activePeer.status === "CONNECTED" && (
+                                            <><span className="text-border">|</span><span className="text-green-400">Connected</span></>
+                                        )}
                                     </span>
                                 </div>
                             </div>
@@ -117,6 +155,12 @@ export default function PeerChatPage() {
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                            {chatHistory.length === 0 && (
+                                <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+                                    <MessageSquareDashed className="h-10 w-10 opacity-30" />
+                                    <p className="text-sm">No messages yet. Say hi! 👋</p>
+                                </div>
+                            )}
                             {chatHistory.map(msg => (
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
@@ -143,6 +187,7 @@ export default function PeerChatPage() {
                                     </div>
                                 </motion.div>
                             ))}
+                            <div ref={bottomRef} />
                         </div>
 
                         {/* Input */}
@@ -153,16 +198,18 @@ export default function PeerChatPage() {
                                     onChange={(e) => setMessageText(e.target.value)}
                                     placeholder={`Message ${activePeer.name.split(' ')[0]}...`}
                                     className="flex-1"
+                                    disabled={sending}
                                 />
-                                <Button type="submit" size="icon" disabled={!messageText.trim()}>
+                                <Button type="submit" size="icon" disabled={!messageText.trim() || sending}>
                                     <Send className="h-4 w-4" />
                                 </Button>
                             </form>
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                        Select a conversation to start chatting
+                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                        <MessageSquareDashed className="h-12 w-12 opacity-20" />
+                        <p>Select a user to start chatting</p>
                     </div>
                 )}
             </div>

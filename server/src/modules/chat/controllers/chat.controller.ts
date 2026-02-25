@@ -9,13 +9,19 @@ export class ChatController {
     constructor(private readonly chatService: ChatService) { }
 
     @Get()
-    getConversations(@CurrentUser() user: any) {
+    getConversations(@CurrentUser() user: { id: string }) {
         return this.chatService.getUserConversations(user.id);
+    }
+
+    /** Get or create a 1-to-1 conversation with another user */
+    @Post('conversation/:peerId')
+    getOrCreate(@CurrentUser() user: { id: string }, @Param('peerId') peerId: string) {
+        return this.chatService.getOrCreateConversation(user.id, peerId);
     }
 
     @Get(':conversationId/messages')
     getMessages(
-        @CurrentUser() user: any,
+        @CurrentUser() user: { id: string },
         @Param('conversationId') conversationId: string,
         @Query('cursor') cursor?: string,
     ) {
@@ -24,10 +30,11 @@ export class ChatController {
 
     @Post(':conversationId/messages')
     sendMessage(
-        @CurrentUser() user: any,
+        @CurrentUser() user: { id: string },
         @Param('conversationId') conversationId: string,
         @Body() body: { content: string },
     ) {
         return this.chatService.sendMessage(user.id, conversationId, body.content);
     }
 }
+

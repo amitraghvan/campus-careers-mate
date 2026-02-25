@@ -15,17 +15,17 @@ export class PeerProfileController {
     ) { }
 
     @Get('discover')
-    discover(@CurrentUser() user: any, @Query() query: PeerDiscoveryQueryDto) {
+    discover(@CurrentUser() user: { id: string }, @Query() query: PeerDiscoveryQueryDto) {
         return this.peerDiscoveryService.discoverPeers(user.id, query);
     }
 
     @Post()
-    createOrUpdate(@CurrentUser() user: any, @Body() dto: CreatePeerProfileDto) {
+    createOrUpdate(@CurrentUser() user: { id: string }, @Body() dto: CreatePeerProfileDto) {
         return this.peerProfileService.createOrUpdate(user.id, dto);
     }
 
     @Get('me')
-    getMyProfile(@CurrentUser() user: any) {
+    getMyProfile(@CurrentUser() user: { id: string }) {
         return this.peerProfileService.getMyProfile(user.id);
     }
 

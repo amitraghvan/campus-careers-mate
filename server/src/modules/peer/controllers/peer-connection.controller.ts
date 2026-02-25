@@ -10,27 +10,27 @@ export class PeerConnectionController {
     constructor(private readonly peerConnectionService: PeerConnectionService) { }
 
     @Post('request/:userId')
-    sendRequest(@CurrentUser() user: any, @Param('userId') receiverId: string) {
+    sendRequest(@CurrentUser() user: { id: string }, @Param('userId') receiverId: string) {
         return this.peerConnectionService.sendRequest(user.id, receiverId);
     }
 
     @Patch('accept/:requestId')
-    acceptRequest(@CurrentUser() user: any, @Param('requestId') requestId: string) {
+    acceptRequest(@CurrentUser() user: { id: string }, @Param('requestId') requestId: string) {
         return this.peerConnectionService.respondToRequest(requestId, user.id, ConnectionStatus.ACCEPTED);
     }
 
     @Delete('reject/:requestId')
-    rejectRequest(@CurrentUser() user: any, @Param('requestId') requestId: string) {
+    rejectRequest(@CurrentUser() user: { id: string }, @Param('requestId') requestId: string) {
         return this.peerConnectionService.rejectRequest(requestId, user.id);
     }
 
     @Get()
-    getConnections(@CurrentUser() user: any) {
+    getConnections(@CurrentUser() user: { id: string }) {
         return this.peerConnectionService.getConnections(user.id);
     }
 
     @Get('incoming')
-    getIncomingRequests(@CurrentUser() user: any) {
+    getIncomingRequests(@CurrentUser() user: { id: string }) {
         return this.peerConnectionService.getIncomingRequests(user.id);
     }
 }

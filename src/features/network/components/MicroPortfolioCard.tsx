@@ -34,59 +34,66 @@ export function MicroPortfolioCard({ peer, onConnect, onChat }: MicroPortfolioCa
 
             <div className="space-y-3">
                 <div className="bg-secondary/30 rounded-lg p-3 text-sm italic text-muted-foreground border border-border/50">
-                    "{peer.bio}"
+                    "{peer.bio || 'No bio yet'}"
                 </div>
 
                 <div>
                     <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Target Roles</p>
                     <div className="flex flex-wrap gap-1.5">
-                        {peer.targetRoles.map(role => (
+                        {peer.targetRoles.length > 0 ? peer.targetRoles.map(role => (
                             <Badge key={role} variant="secondary" className="text-xs font-normal">
                                 {role}
                             </Badge>
-                        ))}
+                        )) : <span className="text-xs text-muted-foreground/60 italic">Not set</span>}
                     </div>
                 </div>
 
                 <div>
                     <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Skills</p>
                     <div className="flex flex-wrap gap-1.5">
-                        {peer.skills.map(skill => (
+                        {peer.skills.length > 0 ? peer.skills.map(skill => (
                             <Badge key={skill} variant="outline" className="text-xs text-muted-foreground">
                                 {skill}
                             </Badge>
-                        ))}
+                        )) : <span className="text-xs text-muted-foreground/60 italic">Not set</span>}
                     </div>
                 </div>
             </div>
 
-            <div className="mt-auto pt-2">
+            {/* Action Buttons — Message is always visible, Connect changes state */}
+            <div className="mt-auto pt-2 flex gap-2">
+                {/* Message button — always shown */}
+                <Button
+                    className="flex-1 gap-2"
+                    variant="outline"
+                    onClick={() => onChat?.(peer.id)}
+                >
+                    <MessageSquare className="h-4 w-4" /> Message
+                </Button>
+
+                {/* Connect / status button */}
                 {peer.status === "CONNECTED" ? (
-                    <Button
-                        className="w-full gap-2"
-                        variant="default"
-                        onClick={() => onChat?.(peer.id)}
-                    >
-                        <MessageSquare className="h-4 w-4" /> Message
+                    <Button className="flex-1 gap-2" variant="default" disabled>
+                        <Check className="h-4 w-4" /> Connected
                     </Button>
                 ) : peer.status === "PENDING" ? (
                     peer.requestId ? (
                         <Button
-                            className="w-full gap-2"
+                            className="flex-1 gap-2"
                             variant="default"
                             onClick={() => onConnect?.(peer.id, peer.requestId)}
                         >
-                            <Check className="h-4 w-4" /> Accept Request
+                            <Check className="h-4 w-4" /> Accept
                         </Button>
                     ) : (
-                        <Button className="w-full gap-2" variant="outline" disabled>
-                            <Clock className="h-4 w-4" /> Request Sent
+                        <Button className="flex-1 gap-2" variant="outline" disabled>
+                            <Clock className="h-4 w-4" /> Pending
                         </Button>
                     )
                 ) : (
                     <Button
-                        className="w-full gap-2"
-                        variant="outline"
+                        className="flex-1 gap-2"
+                        variant="default"
                         onClick={() => onConnect?.(peer.id)}
                     >
                         <UserPlus className="h-4 w-4" /> Connect

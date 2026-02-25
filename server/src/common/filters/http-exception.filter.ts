@@ -69,9 +69,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
           error = 'Service Unavailable';
         } else if (errorName === 'PrismaClientKnownRequestError') {
           status = HttpStatus.BAD_REQUEST;
-          const prismaCode = (exception as any).code || 'unknown';
-          const metaInfo = (exception as any).meta ? JSON.stringify((exception as any).meta) : '';
-          this.logger.error(`PrismaClientKnownRequestError [${prismaCode}]: ${exception.message} ${metaInfo}`);
+          const ex = exception as { code?: string; meta?: unknown };
+          const prismaCode = ex.code || 'unknown';
+          const metaInfo = ex.meta ? JSON.stringify(ex.meta) : '';
+          this.logger.error(`PrismaClientKnownRequestError [${prismaCode}]: ${(exception as Error).message} ${metaInfo}`);
           message = `A database error occurred (code: ${prismaCode}). Please check your request.`;
           error = 'Bad Request';
         } else {

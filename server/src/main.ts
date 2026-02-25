@@ -43,11 +43,17 @@ async function bootstrap() {
     .map((o) => o.trim())
     .filter(Boolean);
 
+  const isDev = config.get<string>("NODE_ENV", "development") !== "production";
+
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
+      // Allow requests with no origin (mobile apps, curl, Swagger, etc.)
       if (!origin) return callback(null, true);
-      // Allow if origin is in the allowed list or is a Vercel preview deploy
+      // In development, allow ANY localhost origin (handles Vite port-hopping 8080/8081/8082/5173)
+      if (isDev && /^http:\/\/localhost:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      // Allow if origin is in the explicit allowlist or is a Vercel preview deploy
       if (
         allowedOrigins.includes(origin) ||
         origin.endsWith(".vercel.app")
