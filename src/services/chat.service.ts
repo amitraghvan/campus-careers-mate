@@ -3,9 +3,9 @@
  * Calls the Google Generative AI SDK directly from the frontend.
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+const API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
 
 const SYSTEM_PROMPT = `You are PlaceTrack AI — a friendly, helpful placement preparation assistant for Indian college students.
 
@@ -62,44 +62,42 @@ export const chatService = {
 
     async sendMessage(userMessage: string, history: ChatMessage[]): Promise<string> {
         if (!API_KEY) {
-            return "⚠️ Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your environment.";
+            return "⚠️ Groq API key is not configured. Please set VITE_GROQ_API_KEY in your environment.";
         }
 
         try {
-            const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-            // Build conversation history for context
-            const chatHistory = history.map((msg) => ({
-                role: msg.role as "user" | "model",
-                parts: [{ text: msg.text }],
-            }));
-
-            const chat = model.startChat({
-                history: chatHistory,
-                generationConfig: {
-                    maxOutputTokens: 1024,
-                    temperature: 0.7,
-                },
+            const groq = new Groq({
+                apiKey: API_KEY,
+                dangerouslyAllowBrowser: true // Required for frontend usage
             });
 
-            // Send with system context
-            const prompt = history.length === 0
-                ? `${SYSTEM_PROMPT}\n\nUser: ${userMessage}`
-                : userMessage;
+            // Build conversation messages array
+            const messages = [
+                { role: "system", content: SYSTEM_PROMPT },
+                ...history.map((msg) => ({
+                    role: msg.role === "model" ? "assistant" : "user",
+                    content: msg.text,
+                })),
+                { role: "user", content: userMessage }
+            ];
 
-            const result = await chat.sendMessage(prompt);
-            const response = result.response;
-            return response.text();
+            const response = await groq.chat.completions.create({
+                messages: messages as any,
+                model: "llama-3.1-8b-instant", // Ensure we use an actively supported Groq model
+                temperature: 0.7,
+                max_tokens: 1024,
+            });
+
+            return response.choices[0]?.message?.content || "No response generated.";
         } catch (error: unknown) {
-            console.error("[Chat] Gemini API error:", error);
+            console.error("[Chat] Groq API error:", error);
 
             const message = error instanceof Error ? error.message : "";
-            if (message.includes("API_KEY")) {
-                return "⚠️ Invalid API key. Please check your VITE_GEMINI_API_KEY.";
+            if (message.includes("API key") || message.includes("401")) {
+                return "⚠️ Invalid API key. Please check your VITE_GROQ_API_KEY.";
             }
-            if (message.includes("quota")) {
-                return "⚠️ API quota exceeded. Please try again later.";
+            if (message.includes("rate limit") || message.includes("429")) {
+                return "⚠️ API quota exceeded or rate limited. Please try again later.";
             }
             return "Sorry, I couldn't process that. Please try again! 🔄";
         }

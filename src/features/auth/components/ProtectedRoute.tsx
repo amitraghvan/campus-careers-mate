@@ -3,16 +3,16 @@
  */
 
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks";
+import { useAuth } from "@clerk/clerk-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -23,7 +23,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isSignedIn) {
     return <Navigate to="/auth" replace />;
   }
 

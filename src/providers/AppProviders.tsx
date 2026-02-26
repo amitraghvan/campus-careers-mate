@@ -9,7 +9,15 @@ import { BrowserRouter } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { AuthProvider } from "@/features/auth/contexts/AuthContext";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { dark } from "@clerk/themes";
+
+// Import your publishable key
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Publishable Key");
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,15 +34,33 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>{children}</AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignOutUrl="/"
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "hsl(172, 66%, 50%)",
+          colorBackground: "transparent",
+          colorInputBackground: "transparent",
+          colorInputText: "hsl(210, 40%, 96%)",
+          colorText: "hsl(210, 40%, 96%)",
+          colorTextSecondary: "hsl(220, 10%, 55%)",
+          fontFamily: "'Inter', 'Space Grotesk', system-ui, sans-serif",
+          borderRadius: "0.75rem",
+        },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            {children}
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
   );
 }
 

@@ -14,7 +14,6 @@ import {
     StickyNote,
     User,
     GraduationCap,
-    LogOut,
     ChevronLeft,
     ChevronRight,
     Menu,
@@ -23,8 +22,7 @@ import {
     Globe,
     Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/features/auth/hooks";
+import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
 import { cn } from "@/lib/utils";
 import { OpportunityProvider } from "@/features/opportunities/contexts/OpportunityContext";
@@ -44,21 +42,14 @@ const NAV_ITEMS = [
 export default function DashboardLayout() {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { user, signOut } = useAuth();
+    const { user } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
-
-    const handleSignOut = async () => {
-        await signOut();
-        navigate("/");
-    };
 
     return (
         <OpportunityProvider>
             <MomentumProvider>
                 <div className="min-h-screen bg-background flex">
-                    {/* ... existing code ... */}
-                    {/* (Entire layout content) */}
                     <AnimatePresence>
                         {mobileOpen && (
                             <motion.div
@@ -150,38 +141,27 @@ export default function DashboardLayout() {
 
                         {/* User section */}
                         <div className={cn(
-                            "border-t border-border/30 p-3 shrink-0",
-                            collapsed && "flex flex-col items-center"
+                            "border-t border-border/30 p-3 shrink-0 flex items-center justify-center",
+                            collapsed && "flex-col"
                         )}>
-                            {!collapsed && user && (
-                                <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
-                                        <User className="h-4 w-4 text-primary-foreground" />
+                            <div className={cn(
+                                "flex items-center gap-3 w-full",
+                                collapsed && "justify-center"
+                            )}>
+                                <UserButton appearance={{ elements: { rootBox: "shrink-0" } }} />
+                                {!collapsed && user && (
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium truncate">{user.fullName || user.firstName}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{user.primaryEmailAddress?.emailAddress}</p>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium truncate">{user.name}</p>
-                                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                                    </div>
-                                </div>
-                            )}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleSignOut}
-                                className={cn(
-                                    "text-muted-foreground hover:text-destructive w-full justify-start gap-2",
-                                    collapsed && "justify-center px-0 w-auto"
                                 )}
-                            >
-                                <LogOut className="h-4 w-4" />
-                                {!collapsed && <span>Sign Out</span>}
-                            </Button>
+                            </div>
                         </div>
 
                         {/* Collapse toggle (desktop only) */}
                         <button
                             onClick={() => setCollapsed(!collapsed)}
-                            className="hidden lg:flex absolute -right-3 top-20 h-6 w-6 rounded-full border border-border/50 bg-background items-center justify-center hover:bg-secondary transition-colors shadow-sm"
+                            className="hidden lg:flex absolute -right-3 top-20 h-6 w-6 rounded-full border border-border/50 bg-background items-center justify-center hover:bg-secondary transition-colors shadow-sm z-50"
                         >
                             {collapsed ? (
                                 <ChevronRight className="h-3 w-3" />
@@ -206,6 +186,9 @@ export default function DashboardLayout() {
                                     <GraduationCap className="h-3.5 w-3.5 text-primary-foreground" />
                                 </div>
                                 <span className="text-sm font-display font-bold">{APP_CONFIG.name}</span>
+                            </div>
+                            <div className="ml-auto">
+                                <UserButton />
                             </div>
                         </div>
 

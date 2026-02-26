@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Mail, Copy, Check, ExternalLink } from "lucide-react";
-import { useAuth } from "@/features/auth/hooks";
+import { useUser } from "@clerk/clerk-react";
 
 interface ColdEmailModalProps {
     open: boolean;
@@ -19,7 +19,7 @@ interface ColdEmailModalProps {
 }
 
 export function ColdEmailModal({ open, onOpenChange, opportunity, onSent }: ColdEmailModalProps) {
-    const { user } = useAuth();
+    const { user } = useUser();
     const [subject, setSubject] = useState("");
     const [body, setBody] = useState("");
     const [copied, setCopied] = useState(false);
@@ -27,15 +27,15 @@ export function ColdEmailModal({ open, onOpenChange, opportunity, onSent }: Cold
     useEffect(() => {
         if (open && opportunity) {
             // Smart Subject Line
-            setSubject(`Application for ${opportunity.role} Role - ${user?.name}`);
+            const myName = user?.fullName || "[My Name]";
+            setSubject(`Application for ${opportunity.role} Role - ${myName}`);
 
             // Context-Aware Body
             const greeting = opportunity.hrName ? `Hi ${opportunity.hrName},` : "Hi Hiring Team,";
             const company = opportunity.company;
             const role = opportunity.role;
-            const myName = user?.name || "[My Name]";
-            const myCollege = user?.college || "[My College]";
-            // const myDegree = user?.academic?.degree || "[My Degree]"; // If we had academic context available here easily
+            const userMetadata: any = user?.unsafeMetadata || {};
+            const myCollege = userMetadata?.college || "[My College]";
 
             const template = `${greeting}
 
@@ -48,8 +48,8 @@ My resume is attached for your review. I would welcome the opportunity to discus
 Best regards,
 
 ${myName}
-${user?.email || ""}
-${user?.academic?.resumeLink || ""}
+${user?.primaryEmailAddress?.emailAddress || ""}
+${userMetadata?.academic?.resumeLink || ""}
 `;
             setBody(template);
         }
