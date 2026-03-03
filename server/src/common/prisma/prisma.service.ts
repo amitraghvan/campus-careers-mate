@@ -6,11 +6,9 @@
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
-import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import ws from "ws";
 
 @Injectable()
 export class PrismaService
@@ -34,10 +32,8 @@ export class PrismaService
     let adapter;
 
     if (connectionString.includes('neon.tech')) {
-      // Neon cloud: use serverless Pool with PrismaNeon adapter
-      neonConfig.webSocketConstructor = ws;
-      const neonPool = new NeonPool({ connectionString });
-      adapter = new PrismaNeon(neonPool as any);
+      // PrismaNeon accepts a PoolConfig (plain object with connectionString)
+      adapter = new PrismaNeon({ connectionString });
     } else {
       // Local PostgreSQL: use standard pg pool
       const pool = new Pool({ connectionString });
