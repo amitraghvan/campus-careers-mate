@@ -1,52 +1,103 @@
 /**
- * JWT Access Token Strategy
- * Validates Bearer tokens on protected routes.
+ * JWT Strategy — validates Clerk-issued Bearer tokens.
+ *
+ * Clerk signs JWTs using RS256. We verify them against Clerk's JWKS endpoint.
+ * On first login, the user record is auto-provisioned in the DB.
  */
 
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import { passportJwtSecret } from "jwks-rsa";
 import { PrismaService } from "../../../common/prisma/prisma.service";
 
 export interface JwtPayload {
-  sub: string; // userId
-  email: string;
-  role: string;
-  iat: number;
-  exp: number;
+  sub: string;          // Clerk user ID (e.g. "user_2abc...")
+  email?: string;       // from Clerk token claims
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+// Derive JWKS URL from the Clerk publishable key
+// pk_test_BASE64 → decode base64 → "domain$" → strip "$" → prepend https://
+function getClerkJwksUri(publishableKey: string): string {
+  const base64Part = publishableKey.replace(/^pk_(test|live)_/, "");
+  const decoded = Buffer.from(base64Part, "base64").toString("utf-8");
+  const domain = decoded.replace(/\$$/, "").trim();
+  return `https://${domain}/.well-known/jwks.json`;
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
-    config: ConfigService,
+    _config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
+    // Read directly from process.env — ConfigService may not be ready
+    // when the Strategy super() constructor runs
+    const publishableKey = process.env.CLERK_PUBLISHABLE_KEY ?? "";
+    const jwksUri = publishableKey
+      ? getClerkJwksUri(publishableKey)
+      : "https://sure-mako-81.clerk.accounts.dev/.well-known/jwks.json"; // fallback
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get<string>("JWT_ACCESS_SECRET"),
+      secretOrKeyProvider: passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 10,
+        jwksUri,
+      }),
+      algorithms: ["RS256"],
     });
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
+    const clerkUserId = payload.sub;
+    if (!clerkUserId) throw new UnauthorizedException("Invalid token");
+
+    // Extract email from Clerk token (may be in 'email' or nested)
+    const email: string =
+      payload.email ||
+      payload.primary_email_address ||
+      `${clerkUserId}@placeholder.local`;
+
+    // Auto-provision user in DB on first login
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: clerkUserId },
+          { email: email.toLowerCase() },
+        ],
       },
+      select: { id: true, email: true, name: true, role: true, isActive: true },
     });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException("Account is inactive or not found");
+    if (!user) {
+      // Create user record for new Clerk user
+      const name =
+        (payload.first_name && payload.last_name
+          ? `${payload.first_name} ${payload.last_name}`
+          : payload.first_name || payload.name || email.split("@")[0]);
+
+      user = await this.prisma.user.create({
+        data: {
+          id: clerkUserId,
+          email: email.toLowerCase(),
+          name,
+          passwordHash: "CLERK_MANAGED", // not used — Clerk handles auth
+          college: null,
+        },
+        select: { id: true, email: true, name: true, role: true, isActive: true },
+      });
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException("Account is inactive");
     }
 
     return user;
   }
 }
-

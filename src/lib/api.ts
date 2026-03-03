@@ -20,16 +20,14 @@ type RequestOptions = RequestInit & {
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const url = `${API_BASE}${API_PREFIX}${endpoint}`;
 
-    // Get JWT token from local session (set by authService after sign-in)
+    // Get Clerk JWT token — backend validates it via JWKS
     let token = "";
     try {
-        const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (raw) {
-            const session = JSON.parse(raw);
-            token = session?.token || session?.accessToken || "";
+        if (typeof window !== "undefined" && window.Clerk?.session) {
+            token = await window.Clerk.session.getToken() ?? "";
         }
-    } catch {
-        // ignore parse errors
+    } catch (e) {
+        console.warn("[api] Failed to retrieve Clerk token", e);
     }
 
     const headers: Record<string, string> = {

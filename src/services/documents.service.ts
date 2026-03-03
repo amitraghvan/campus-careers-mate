@@ -51,13 +51,11 @@ export const documentsService = {
         const formData = new FormData();
         formData.append('file', file);
 
-        // Read JWT from localStorage (same key used by authService)
+        // Get Clerk JWT token — backend validates it via JWKS
         let token = '';
         try {
-            const raw = localStorage.getItem('placement-tracker-auth');
-            if (raw) {
-                const session = JSON.parse(raw);
-                token = session?.token || session?.accessToken || '';
+            if (typeof window !== 'undefined' && window.Clerk?.session) {
+                token = await window.Clerk.session.getToken() ?? '';
             }
         } catch { /* ignore */ }
 
