@@ -15,10 +15,6 @@ import { dark } from "@clerk/themes";
 // Import your publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Publishable Key");
-}
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -32,7 +28,45 @@ interface AppProvidersProps {
   children: ReactNode;
 }
 
+function MissingKeyError() {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#0a0a0f",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "'Inter', system-ui, sans-serif",
+      color: "#e2e8f0",
+    }}>
+      <div style={{
+        textAlign: "center",
+        padding: "2rem",
+        maxWidth: "480px",
+        border: "1px solid rgba(239,68,68,0.3)",
+        borderRadius: "1rem",
+        background: "rgba(239,68,68,0.05)",
+      }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>⚠️</div>
+        <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#f87171", marginBottom: "0.5rem" }}>
+          Missing Configuration
+        </h1>
+        <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6 }}>
+          The <code style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px" }}>VITE_CLERK_PUBLISHABLE_KEY</code> environment variable is not set.
+        </p>
+        <p style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "1rem" }}>
+          Add it in your Vercel → Settings → Environment Variables and redeploy.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function AppProviders({ children }: AppProvidersProps) {
+  if (!PUBLISHABLE_KEY) {
+    return <MissingKeyError />;
+  }
+
   return (
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
