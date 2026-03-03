@@ -6,8 +6,11 @@
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
+import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
+import ws from "ws";
 
 @Injectable()
 export class PrismaService
@@ -21,20 +24,27 @@ export class PrismaService
     if (!connectionString) {
       console.error(
         '❌ DATABASE_URL environment variable is not set! ' +
-        'Please set it in your environment (Render Dashboard → Environment tab).'
+        'Please set it in your environment.'
       );
       super();
       this.logger = new Logger(PrismaService.name);
       return;
     }
 
-    // Prisma 7: Use Adapter for dynamic connection configuration
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
+    let adapter;
 
-    super({
-      adapter,
-    });
+    if (connectionString.includes('neon.tech')) {
+      // Neon cloud: use serverless Pool with PrismaNeon adapter
+      neonConfig.webSocketConstructor = ws;
+      const neonPool = new NeonPool({ connectionString });
+      adapter = new PrismaNeon(neonPool as any);
+    } else {
+      // Local PostgreSQL: use standard pg pool
+      const pool = new Pool({ connectionString });
+      adapter = new PrismaPg(pool);
+    }
+
+    super({ adapter });
 
     this.logger = new Logger(PrismaService.name);
   }
@@ -80,4 +90,3 @@ export class PrismaService
     throw new Error("Transaction failed after max retries");
   }
 }
-
