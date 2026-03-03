@@ -1,5 +1,15 @@
 import { AUTH_STORAGE_KEY } from "@/features/auth/constants";
 
+declare global {
+    interface Window {
+        Clerk?: {
+            session?: {
+                getToken: () => Promise<string>;
+            };
+        };
+    }
+}
+
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const API_PREFIX = "/api/v1";
 
@@ -10,16 +20,16 @@ type RequestOptions = RequestInit & {
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const url = `${API_BASE}${API_PREFIX}${endpoint}`;
 
-    // Get token
+    // Get JWT token from local session (set by authService after sign-in)
     let token = "";
     try {
-        const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (stored) {
-            const session = JSON.parse(stored);
-            token = session?.accessToken || session?.token || session?.tokens?.accessToken || "";
+        const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+        if (raw) {
+            const session = JSON.parse(raw);
+            token = session?.token || session?.accessToken || "";
         }
-    } catch (e) {
-        console.warn("Failed to retrieve token", e);
+    } catch {
+        // ignore parse errors
     }
 
     const headers: Record<string, string> = {
