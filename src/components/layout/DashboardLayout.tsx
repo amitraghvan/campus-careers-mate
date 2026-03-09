@@ -37,7 +37,7 @@ const NAV_ITEMS = [
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
     { to: "/notes", icon: StickyNote, label: "Notes" },
-    { to: "/documents", icon: FileText, label: "Documents" },
+    { to: "/documents", icon: FileText, label: "AI Learning Hub" },
     { to: "/profile", icon: User, label: "Profile" },
 ];
 

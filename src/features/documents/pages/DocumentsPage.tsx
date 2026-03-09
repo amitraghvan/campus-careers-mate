@@ -309,7 +309,7 @@ export default function DocumentsPage() {
                             className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-info text-primary-foreground font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
                         >
                             {uploading ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
-                            {uploading ? "Uploading..." : "Upload PDF"}
+                            {uploading ? "Uploading..." : "AI Learning Hub"}
                         </button>
                     </div>
 
