@@ -25,6 +25,7 @@ import { PeerModule } from './modules/peer/peer.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { AiModule } from './modules/ai/ai.module';
+import { ResumeModule } from './modules/resume/resume.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { AiModule } from './modules/ai/ai.module';
     ChatModule,
     DocumentsModule,
     AiModule,
+    ResumeModule,
   ],
   providers: [
     // Global rate-limit guard

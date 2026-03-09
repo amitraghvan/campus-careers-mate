@@ -76,4 +76,30 @@ export class AiController {
         const questions = await this.aiService.generateQuiz(doc.extractedText);
         return { questions };
     }
+
+    // ── Resume AI Endpoints ──────────────────────────────────────────
+
+    @Post('resume/enhance-bullets')
+    async enhanceBullets(@Body() body: { section: string; bullets: string[] }) {
+        const enhanced = await this.aiService.enhanceResumeBullets(
+            body.section || 'Experience',
+            body.bullets || [],
+        );
+        return { bullets: enhanced };
+    }
+
+    @Post('resume/generate-summary')
+    async generateResumeSummary(@Body() body: { resumeData: any }) {
+        const summary = await this.aiService.generateResumeSummary(body.resumeData || {});
+        return { summary };
+    }
+
+    @Post('resume/ats-score')
+    async atsScore(@Body() body: { resumeData: any; jobDescription?: string }) {
+        const result = await this.aiService.analyzeATSScore(
+            body.resumeData || {},
+            body.jobDescription,
+        );
+        return result;
+    }
 }

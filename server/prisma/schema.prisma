@@ -54,6 +54,7 @@ model User {
   documents           Document[]
   flashcards          Flashcard[]
   quizResults         QuizResult[]
+  resumes             Resume[]
 
   @@index([email])
   @@index([role])
@@ -297,4 +298,22 @@ model QuizResult {
   @@index([documentId])
   @@index([userId])
   @@map("quiz_results")
+}
+
+// ── Resume Builder (AI Resume Module) ─────────────
+
+model Resume {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String   @default("My Resume")
+  data        Json     // Full structured resume JSON
+  atsScore    Int?     @map("ats_score")
+  atsFeedback Json?    @map("ats_feedback")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("resumes")
 }

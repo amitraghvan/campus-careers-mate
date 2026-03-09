@@ -22,6 +22,7 @@ import {
     Globe,
     Users,
     FileText,
+    FileEdit,
 } from "lucide-react";
 import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
     { to: "/notes", icon: StickyNote, label: "Notes" },
     { to: "/documents", icon: FileText, label: "AI Learning Hub" },
+    { to: "/resume", icon: FileEdit, label: "Resume Builder" },
     { to: "/profile", icon: User, label: "Profile" },
 ];
 
