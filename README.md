@@ -1,144 +1,154 @@
-# 🚀 PlaceTrack --- Smart Placement Companion
+# SecuraAI 🚀
 
-> Turning placement chaos into clarity.
+### AI Career & Placement Assistant for Students
 
-PlaceTrack is an all-in-one placement tracking and preparation platform
-designed to help students manage opportunities, deadlines, applications,
-networking, and preparation in one centralized system.
+SecuraAI is an intelligent career platform designed to help students manage placements, build professional resumes, prepare for interviews, and track job opportunities — all in one powerful dashboard.
 
-Built for hackathons and real-world college deployment, PlaceTrack acts
-as a personal placement command center for every student.
+The platform combines AI-powered tools with career tracking features to help students stay organized and land better opportunities.
 
-------------------------------------------------------------------------
+---
 
-# 📌 Problem Statement
+## 🌟 Features
 
-Every year, thousands of students miss dream companies --- not because
-they lack skills, but because they miss deadlines or lose track of
-applications.
+### 📊 Placement Tracker
 
-Current placement tracking methods: - WhatsApp groups
-- Emails
-- Screenshots
-- Excel sheets
-- Memory
+Track all your job applications, internships, and opportunities in one place.
 
-Problems: - Missed deadlines
-- No application tracking
-- Scattered preparation notes
-- No analytics or insights
-- High stress during placements
+* Monitor application stages
+* Track company deadlines
+* Organize placement journey
 
-There is no unified system acting as a single source of truth.
+---
 
-------------------------------------------------------------------------
+### ⏰ Deadline Manager
 
-# 💡 Solution --- PlaceTrack
+Never miss important job or internship deadlines.
 
-PlaceTrack is a smart placement management portal that helps students: -
-Track opportunities
-- Manage application pipeline
-- Monitor deadlines
-- Organize preparation
-- Connect with peers
-- Analyze placement performance
+* Upcoming deadline alerts
+* Application reminders
+* Placement season tracking
 
-It works like a personal placement CRM for students.
+---
 
-------------------------------------------------------------------------
+### 🤖 AI Resume Builder
 
-# ✨ Core Features
+Generate professional resumes optimized for ATS systems used by companies.
 
-## 🏠 Smart Dashboard
+Features include:
 
--   Total opportunities
--   Upcoming deadlines
--   Offers received
--   Applications in progress
--   Daily focus goals
--   Peer suggestions
+* Smart resume generation
+* ATS compatibility score
+* Resume improvement suggestions
+* Multiple resume templates
+* Export as PDF or DOCX
 
-## 🌍 Explore Opportunities
+---
 
--   Discover internships & jobs
--   Filter by role, company, skill
--   Trending opportunities
--   Personalized recommendations
+### 📚 AI Learning Hub
 
-## 📊 Application Pipeline Tracker
+Upload study documents and let AI help you study smarter.
 
-Track stages: - Wishlist
-- Applied
-- Interview
-- Offer
+* Document-based learning
+* AI insights from study material
+* Smart summaries and explanations
 
-## 📅 Smart Calendar & Deadline Manager
+---
 
--   Application deadlines
--   Interview schedules
--   Status indicators
--   Placement calendar
+### 👥 Peer Connect
 
-## 📝 Preparation Notes System
+Connect with students preparing for the same companies.
 
--   Interview notes
--   Company research
--   Technical prep
--   HR prep
+* Share resources
+* Discuss preparation strategies
+* Build a learning network
 
-## 🤝 Peer Connect Network
+---
 
--   Connect with students
--   Find study partners
--   Collaborate
+### 📈 Analytics Dashboard
 
-## 📈 Analytics Dashboard
+Track your preparation and career progress.
 
--   Total applications
--   Success rate
--   Offer tracking
--   Trends & insights
+* Application progress tracking
+* Interview pipeline
+* Performance analytics
 
-## 📧 Cold Email Tracker
+---
 
--   Track outreach
--   Manage responses
--   Follow-ups
+## 🧠 How It Works
 
-------------------------------------------------------------------------
+1️⃣ Add opportunities and track job applications
+2️⃣ Upload documents to the AI Learning Hub
+3️⃣ Generate and optimize your resume with AI
+4️⃣ Track deadlines and interview progress
+5️⃣ Connect with peers and prepare smarter
 
-# 🏗️ Tech Stack
+---
 
-Frontend: React.js / Next.js, Tailwind CSS\
-Backend: Render
-Deployment: Vercel 
+## 🖥️ Tech Stack
 
-------------------------------------------------------------------------
+Frontend
 
-# ⚙️ Installation
+* React / Next.js
+* Tailwind CSS
+* Framer Motion
 
-git clone https://github.com/amitraghvan/campus-careers-mate.git cd placetrack
-npm install
-npm run dev
+Backend
 
-------------------------------------------------------------------------
+* Node.js
+* Express.js
 
-# 🚀 Future Scope
+AI Integration
 
--   AI resume analyzer
--   AI interview assistant
--   Smart recommendations
--   Mobile app
--   College integration
+* OpenAI / LLM APIs
 
-------------------------------------------------------------------------
+Database
 
-# 🏆 Hackathon Value
+* MongoDB / PostgreSQL
 
-Real-world problem solving
-Clean UI/UX
-Scalable architecture
-High student impact
+Deployment
+
+* Vercel
+
+---
+
+## 📸 Screenshots
+
+### Dashboard
+
+Track opportunities, deadlines, and career progress.
+
+### AI Learning Hub
+
+Upload documents and use AI to analyze study material.
+
+### AI Resume Builder
+
+Generate ATS-optimized resumes in seconds.
+
+---
+
+## 🚀 Future Improvements
+
+* AI Interview Preparation
+* Job Role Skill Analyzer
+* Resume Keyword Scanner
+* Company Interview Insights
+* Smart Career Roadmap
+
+---
+
+## 👨‍💻 Author
+
+**Amit Kumar**
+
+Student Developer building tools to help students prepare smarter for placements and careers.
+
+---
+
+## ⭐ Support
+
+If you like this project, please give it a **star ⭐ on GitHub**.
+
 
 ------------------------------------------------------------------------
 
