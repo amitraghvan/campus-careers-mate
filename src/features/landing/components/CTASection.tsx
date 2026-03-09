@@ -1,85 +1,76 @@
 /**
- * CTASection — final call-to-action with interactive elements.
+ * CTASection — SecuraAI final call to action (placement platform focus).
  */
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 import { APP_CONFIG } from "@/config";
-
-const TESTIMONIALS = [
-  { name: "Priya S.", college: "IIT Delhi", text: "Landed 3 offers. PlaceTrack kept me organized!" },
-  { name: "Rahul M.", college: "NIT Trichy", text: "Never missed a single deadline this season." },
-  { name: "Sneha K.", college: "BITS Pilani", text: "The dashboard is a game changer 🔥" },
-];
 
 export function CTASection() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative py-32 px-6">
-      <div className="absolute inset-0 bg-radial-glow opacity-50" />
+    <section className="relative py-36 px-6 overflow-hidden" style={{ background: "#050818" }}>
+      {/* Glows */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,102,255,0.13) 0%, rgba(124,58,237,0.08) 40%, transparent 70%)" }} />
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: "linear-gradient(rgba(0,212,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.018) 1px,transparent 1px)", backgroundSize: "72px 72px" }} />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-[1px] pointer-events-none"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent)" }} />
 
-      {/* Testimonials */}
-      <div className="relative max-w-5xl mx-auto mb-20">
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center text-sm text-muted-foreground mb-8 uppercase tracking-widest"
-        >
-          Loved by students across India
-        </motion.p>
-        <div className="grid sm:grid-cols-3 gap-4">
-          {TESTIMONIALS.map((t, i) => (
-            <motion.div
-              key={t.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -4 }}
-              className="glass-card rounded-xl p-5 text-center"
-            >
-              <div className="flex gap-0.5 justify-center mb-3">
-                {[...Array(5)].map((_, j) => (
-                  <Star key={j} className="h-3.5 w-3.5 fill-warning text-warning" />
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground mb-3 italic">"{t.text}"</p>
-              <p className="text-xs font-semibold">{t.name}</p>
-              <p className="text-[10px] text-muted-foreground">{t.college}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* CTA */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        className="relative max-w-3xl mx-auto text-center"
+        transition={{ duration: 0.8 }}
+        className="relative max-w-3xl mx-auto text-center z-10"
       >
-        <h2 className="text-4xl sm:text-6xl font-display font-bold mb-6 text-balance">
-          Your future is{" "}
-          <span className="gradient-text-accent">one click</span> away
+        <span className="inline-block text-xs font-semibold tracking-[0.18em] uppercase mb-6 px-4 py-1.5 rounded-full"
+          style={{ background: "rgba(0,212,255,0.07)", border: "1px solid rgba(0,212,255,0.2)", color: "#00d4ff" }}>
+          ✦ Your Career Starts Here
+        </span>
+
+        <h2 className="font-display font-black leading-[1.0] mb-5"
+          style={{ fontSize: "clamp(2.5rem,6vw,5rem)", letterSpacing: "-0.03em" }}>
+          Land Your Dream Job{" "}
+          <span style={{ background: "linear-gradient(135deg,#00d4ff,#7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            With AI
+          </span>
         </h2>
-        <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-          Join thousands of students who stopped missing deadlines and started
-          landing offers. It's free, forever.
+
+        <p className="text-lg mb-10 max-w-xl mx-auto leading-relaxed" style={{ color: "#94a3b8" }}>
+          Join thousands of students using SecuraAI to track opportunities, prepare smarter, and ace their placements.
         </p>
-        <Button
-          size="lg"
-          onClick={() => navigate(APP_CONFIG.routes.auth)}
-          className="text-lg px-10 py-6 bg-gradient-to-r from-accent to-primary text-primary-foreground border-0 hover:opacity-90 glow-accent transition-all hover:scale-105 group"
-        >
-          Get Started Free <Sparkles className="ml-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-        </Button>
-        <p className="text-xs text-muted-foreground mt-4">No credit card required • Free forever • Built with ❤️ in India</p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            id="cta-start"
+            onClick={() => navigate(APP_CONFIG.routes.auth)}
+            className="flex items-center gap-2 font-bold hover:opacity-90 hover:scale-105 transition-all group py-4 px-10 rounded-xl"
+            style={{ background: "linear-gradient(135deg,#00d4ff,#0066ff)", color: "#020617", boxShadow: "0 8px 48px rgba(0,212,255,0.38)", fontSize: "1.05rem", border: "none" }}
+          >
+            Start For Free
+            <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+          </button>
+          <button
+            onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+            className="font-semibold py-4 px-10 rounded-xl transition-all hover:bg-white/5 hover:scale-105"
+            style={{ background: "transparent", color: "#e2e8f0", border: "1px solid rgba(255,255,255,0.15)", fontSize: "1.05rem" }}
+          >
+            Explore Features
+          </button>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-10">
+          {["No credit card required", "Free forever plan", "Setup in 2 minutes", "Built for placement prep"].map(p => (
+            <span key={p} className="flex items-center gap-1.5 text-xs" style={{ color: "#475569" }}>
+              <span style={{ color: "#00d4ff" }}>✓</span> {p}
+            </span>
+          ))}
+        </div>
       </motion.div>
     </section>
   );
 }
-

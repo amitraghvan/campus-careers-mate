@@ -1,5 +1,5 @@
 /**
- * LandingPage — public-facing marketing page.
+ * LandingPage — SecuraAI public marketing page.
  */
 
 import { HeroSection, FeaturesSection, PreviewSection, CTASection } from "@/features/landing/components";
@@ -7,7 +7,7 @@ import { AppHeader, AppFooter } from "@/components/layout";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div style={{ minHeight: "100vh", background: "#06091a", overflow: "hidden" }}>
       <AppHeader />
       <HeroSection />
       <FeaturesSection />
@@ -17,4 +17,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

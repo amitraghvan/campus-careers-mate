@@ -12,6 +12,8 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import helmet from "helmet";
 import * as compression from "compression";
 import * as cookieParser from "cookie-parser";
+import * as express from "express";
+import { join } from "path";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
@@ -33,9 +35,21 @@ async function bootstrap() {
   const corsOrigin = config.get<string>("CORS_ORIGIN", "http://localhost:8080");
 
   // ── Security ────────────────────────────────────
-  app.use(helmet());
+  app.use(
+    helmet({
+      // Disable CSP and frameguard so the PDF iframe viewer can load
+      // files served from this same server (localhost:3000/uploads/...)
+      contentSecurityPolicy: false,
+      frameguard: false,
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
   app.use(compression());
   app.use(cookieParser());
+
+  // ── Serve uploaded files ────────────────────────
+  app.use("/uploads", express.static(join(process.cwd(), "uploads")));
 
   // ── CORS ────────────────────────────────────────
   const allowedOrigins = corsOrigin

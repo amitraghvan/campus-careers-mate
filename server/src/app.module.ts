@@ -23,6 +23,8 @@ import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { NotesModule } from "./modules/notes/notes.module";
 import { PeerModule } from './modules/peer/peer.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -64,6 +66,8 @@ import { ChatModule } from './modules/chat/chat.module';
     NotesModule,
     PeerModule,
     ChatModule,
+    DocumentsModule,
+    AiModule,
   ],
   providers: [
     // Global rate-limit guard

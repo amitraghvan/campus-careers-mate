@@ -21,6 +21,7 @@ import {
     Mail,
     Globe,
     Users,
+    FileText,
 } from "lucide-react";
 import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
     { to: "/notes", icon: StickyNote, label: "Notes" },
+    { to: "/documents", icon: FileText, label: "Documents" },
     { to: "/profile", icon: User, label: "Profile" },
 ];
 

@@ -21,6 +21,7 @@ const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage")
 const NotesPage = lazy(() => import("@/features/notes/pages/NotesPage"));
 const ProfilePage = lazy(() => import("@/features/profile/pages/ProfilePage"));
 const NotFoundPage = lazy(() => import("@/routes/pages/NotFoundPage"));
+const DocumentsPage = lazy(() => import("@/features/documents/pages/DocumentsPage"));
 
 function PageLoader() {
   return (
@@ -57,6 +58,7 @@ export function AppRoutes() {
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/notes" element={<NotesPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 

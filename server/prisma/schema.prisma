@@ -51,6 +51,9 @@ model User {
   conversationsOne    Conversation[]   @relation("ParticipantOne")
   conversationsTwo    Conversation[]   @relation("ParticipantTwo")
   messages            Message[]
+  documents           Document[]
+  flashcards          Flashcard[]
+  quizResults         QuizResult[]
 
   @@index([email])
   @@index([role])
@@ -240,4 +243,58 @@ model Message {
   @@index([conversationId])
   @@index([createdAt])
   @@map("messages")
+}
+
+// ── Documents (AI Learning Module) ───────────────
+
+model Document {
+  id            String      @id @default(uuid())
+  userId        String      @map("user_id")
+  fileName      String      @map("file_name")
+  fileUrl       String      @map("file_url")
+  fileSize      Int         @map("file_size")
+  extractedText String      @default("") @map("extracted_text")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcards Flashcard[]
+  quizzes    QuizResult[]
+
+  @@index([userId])
+  @@map("documents")
+}
+
+model Flashcard {
+  id         String   @id @default(uuid())
+  documentId String   @map("document_id")
+  userId     String   @map("user_id")
+  question   String
+  answer     String
+  isFavorite Boolean  @default(false) @map("is_favorite")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([userId])
+  @@map("flashcards")
+}
+
+model QuizResult {
+  id             String   @id @default(uuid())
+  documentId     String   @map("document_id")
+  userId         String   @map("user_id")
+  questions      Json
+  score          Int
+  totalQuestions Int      @map("total_questions")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([userId])
+  @@map("quiz_results")
 }
