@@ -147,4 +147,30 @@ export class AiController {
         );
         return result; // returns { error, fixed_code }
     }
+
+    // ── Mock Exam Endpoints ──────────────────────────────────────────
+
+    @Post('mock-exam')
+    async generateMockExam(
+        @Body()
+        body: {
+            subject: string;
+            topic: string;
+            difficulty: string;
+            questionCount: number;
+            uploadedContent?: string;
+        },
+    ) {
+        const { subject, topic, difficulty, questionCount, uploadedContent } = body;
+        
+        // Ensure defaults if missing
+        const result = await this.aiService.generateMockExam(
+            subject || 'General Knowledge',
+            topic || 'Random',
+            difficulty || 'Medium',
+            questionCount ? Number(questionCount) : 5,
+            uploadedContent,
+        );
+        return result; // returns { questions: [...] }
+    }
 }

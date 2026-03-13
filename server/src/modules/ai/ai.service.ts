@@ -280,4 +280,52 @@ No other text. Just the JSON.`,
             };
         }
     }
+
+    // ── Mock Exams ──────────────────────────────────────────────────
+
+    async generateMockExam(
+        subject: string,
+        topic: string,
+        difficulty: string,
+        questionCount: number,
+        uploadedContent?: string,
+    ): Promise<any> {
+        const systemPrompt = `You are an expert educational content creator.
+Generate a mock exam based on the user's request.
+Return ONLY a valid JSON object in the exact following format, with NO extra markdown formatting or text outside the JSON:
+{
+  "questions": [
+    {
+      "question": "What is...",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": "Option A",
+      "explanation": "Because..."
+    }
+  ]
+}`;
+
+        const contextPart = uploadedContent
+            ? `\n\nReference Material:\n${uploadedContent.substring(0, 15000)}`
+            : '';
+
+        const userPrompt = `Generate a mock exam for the subject: ${subject}.
+Topic: ${topic}.
+Difficulty level: ${difficulty}.
+Number of questions: ${questionCount}.${contextPart}
+
+Create multiple-choice questions with 4 options each.
+Include the correct answer and a short explanation for each question.`;
+
+        const result = await this.complete(systemPrompt, userPrompt);
+
+        try {
+            // Try to extract JSON if it was wrapped in markdown blocks
+            const jsonMatch = result.match(/\{[\s\S]*\}/);
+            if (jsonMatch) return JSON.parse(jsonMatch[0]);
+            return JSON.parse(result);
+        } catch (error) {
+            console.error(`Failed to parse AI mock exam response: ${result}`, error);
+            throw new Error('Failed to generate mock exam in the correct format.');
+        }
+    }
 }

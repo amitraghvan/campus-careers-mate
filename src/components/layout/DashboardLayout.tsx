@@ -25,6 +25,7 @@ import {
     FileEdit,
     BrainCircuit,
     TerminalSquare,
+    FileQuestion,
 } from "lucide-react";
 import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
     { to: "/documents", icon: FileText, label: "AI Learning Hub" },
     { to: "/homework", icon: BrainCircuit, label: "Homework Solver" },
     { to: "/code-explainer", icon: TerminalSquare, label: "Code Explainer" },
+    { to: "/mock-exams", icon: FileQuestion, label: "Mock Exams" },
     { to: "/resume", icon: FileEdit, label: "Resume Builder" },
     { to: "/profile", icon: User, label: "Profile" },
 ];

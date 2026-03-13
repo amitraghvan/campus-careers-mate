@@ -91,7 +91,7 @@ const BENEFITS = [
 const TESTIMONIALS = [
   {
     img: "https://i.pravatar.cc/150?u=10",
-    name: "Aarav Singh",
+    name: "Aaravi Singh",
     role: "B.Tech CSE at LPU",
     text: "PlaceTrack completely changed how I prep. The AI Resume Analyzer helped me clear the ATS for my dream internship. Honestly, lifesaver.",
     active: false,
@@ -113,8 +113,8 @@ const TESTIMONIALS = [
 ];
 
 const STATS = [
-  { value: "50,000+", label: "Students Placed Successfully", color: "#00d4ff" },
-  { value: "2M+", label: "Applications Tracked", color: "#a855f7" },
+  { value: "1000+", label: "Students Placed Successfully", color: "#00d4ff" },
+  { value: "10000+", label: "Applications Tracked", color: "#a855f7" },
   { value: "92%", label: "Placement Success Rate", color: "#10b981" },
 ];
 

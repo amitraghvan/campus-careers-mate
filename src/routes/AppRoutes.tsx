@@ -25,6 +25,8 @@ const DocumentsPage = lazy(() => import("@/features/documents/pages/DocumentsPag
 const ResumePage = lazy(() => import("@/features/resume/pages/ResumePage"));
 const HomeworkSolverPage = lazy(() => import("@/features/homework/pages/HomeworkSolverPage"));
 const CodeExplainerPage = lazy(() => import("@/features/homework/pages/CodeExplainerPage"));
+const MockExamPage = lazy(() => import("@/features/exam/pages/MockExamPage"));
+const LearningAnalyticsPage = lazy(() => import("@/features/analytics/pages/LearningAnalyticsPage"));
 
 function PageLoader() {
   return (
@@ -65,6 +67,8 @@ export function AppRoutes() {
           <Route path="/resume" element={<ResumePage />} />
           <Route path="/homework" element={<HomeworkSolverPage />} />
           <Route path="/code-explainer" element={<CodeExplainerPage />} />
+          <Route path="/mock-exams" element={<MockExamPage />} />
+          <Route path="/analytics/learning" element={<LearningAnalyticsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
