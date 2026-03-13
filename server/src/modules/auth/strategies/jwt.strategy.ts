@@ -46,12 +46,32 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       ignoreExpiration: false,
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
+        cacheMaxEntries: 5,
+        cacheMaxAge: 24 * 60 * 60 * 1000, // cache keys for 24 hours
         rateLimit: true,
         jwksRequestsPerMinute: 10,
         jwksUri,
+        handleSigningKeyError: (err, cb) => {
+          console.error("[JwtStrategy] JWKS signing key error — check internet connectivity:", err?.message);
+          cb(err);
+        },
       }),
       algorithms: ["RS256"],
     });
+
+    // Warm up JWKS cache at startup so the first real request doesn't block
+    this.warmUpJwks(jwksUri);
+  }
+
+  /** Pre-fetch JWKS keys so they are cached before the first user request. */
+  private warmUpJwks(jwksUri: string): void {
+    fetch(jwksUri)
+      .then(() => console.log(`[JwtStrategy] ✅ JWKS keys cached from ${jwksUri}`))
+      .catch((err) =>
+        console.warn(
+          `[JwtStrategy] ⚠️  JWKS warm-up failed — auth will retry on first request. Is the internet reachable? Error: ${err?.message}`,
+        ),
+      );
   }
 
   async validate(payload: JwtPayload) {
@@ -90,6 +110,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
           passwordHash: "CLERK_MANAGED", // not used — Clerk handles auth
           college: null,
         },
+        select: { id: true, email: true, name: true, role: true, isActive: true },
+      });
+    } else if (user.id !== clerkUserId) {
+      // Edge case: user was found by email but has a different ID (e.g. local account).
+      // Update their ID to the Clerk ID so FK constraints work correctly.
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { id: clerkUserId },
         select: { id: true, email: true, name: true, role: true, isActive: true },
       });
     }
