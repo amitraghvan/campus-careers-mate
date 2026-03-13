@@ -60,7 +60,7 @@ async function bootstrap() {
   const isDev = config.get<string>("NODE_ENV", "development") !== "production";
 
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       // Allow requests with no origin (mobile apps, curl, Swagger, etc.)
       if (!origin) return callback(null, true);
       // In development, allow ANY localhost origin (handles Vite port-hopping 8080/8081/8082/5173)
