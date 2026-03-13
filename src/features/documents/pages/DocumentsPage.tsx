@@ -203,7 +203,7 @@ export default function DocumentsPage() {
     const toggleFlip = (id: string) => {
         setFlippedCards((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) { next.delete(id); } else { next.add(id); }
             return next;
         });
     };
@@ -248,6 +248,7 @@ export default function DocumentsPage() {
 
     useEffect(() => {
         if (selectedDoc) handleLoadFlashcards();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDoc]);
 
     // — Tabs config —

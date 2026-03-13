@@ -34,7 +34,7 @@ export function ColdEmailModal({ open, onOpenChange, opportunity, onSent }: Cold
             const greeting = opportunity.hrName ? `Hi ${opportunity.hrName},` : "Hi Hiring Team,";
             const company = opportunity.company;
             const role = opportunity.role;
-            const userMetadata: any = user?.unsafeMetadata || {};
+            const userMetadata = (user?.unsafeMetadata as { college?: string, academic?: { resumeLink?: string } }) || {};
             const myCollege = userMetadata?.college || "[My College]";
 
             const template = `${greeting}

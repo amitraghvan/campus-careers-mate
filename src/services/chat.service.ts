@@ -82,6 +82,7 @@ export const chatService = {
             ];
 
             const response = await groq.chat.completions.create({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 messages: messages as any,
                 model: "llama-3.1-8b-instant", // Ensure we use an actively supported Groq model
                 temperature: 0.7,

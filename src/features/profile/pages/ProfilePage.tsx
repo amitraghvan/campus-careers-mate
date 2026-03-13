@@ -16,24 +16,30 @@ import type { AcademicProfile } from "@/features/auth/types";
 import { opportunityService } from "@/services";
 import { formatDate } from "@/utils/date";
 
+type CustomMetadata = {
+    college?: string;
+    academic?: AcademicProfile;
+};
+
+const defaultAcademic = {
+    degree: "",
+    branch: "",
+    currentCGPA: "",
+    twelfthMarks: "",
+    tenthMarks: "",
+    backlogs: "",
+    skills: "",
+    resumeLink: ""
+};
+
 export default function ProfilePage() {
     const { user } = useUser();
     const opportunities = opportunityService.getAll();
     const [isEditing, setIsEditing] = useState(false);
 
     // Local state for form fields
-    const defaultAcademic = {
-        degree: "",
-        branch: "",
-        currentCGPA: "",
-        twelfthMarks: "",
-        tenthMarks: "",
-        backlogs: "",
-        skills: "",
-        resumeLink: ""
-    };
 
-    const userMetadata = (user?.unsafeMetadata as any) || {};
+    const userMetadata = (user?.unsafeMetadata as CustomMetadata) || {};
 
     const [formData, setFormData] = useState({
         name: user?.fullName || "",
@@ -44,7 +50,7 @@ export default function ProfilePage() {
     // Update local state when user data loads/changes
     useEffect(() => {
         if (user) {
-            const meta = (user.unsafeMetadata as any) || {};
+            const meta = (user.unsafeMetadata as CustomMetadata) || {};
             setFormData({
                 name: user.fullName || "",
                 college: meta.college || "",
@@ -106,7 +112,7 @@ export default function ProfilePage() {
 
     const handleExport = () => {
         const data = {
-            user: { name: user?.fullName, email: user?.primaryEmailAddress?.emailAddress, college: (user?.unsafeMetadata as any)?.college },
+            user: { name: user?.fullName, email: user?.primaryEmailAddress?.emailAddress, college: (user?.unsafeMetadata as CustomMetadata)?.college },
             opportunities,
             exportedAt: new Date().toISOString(),
         };
@@ -157,7 +163,7 @@ export default function ProfilePage() {
                             <h2 className="text-xl font-display font-bold">{user?.fullName || "User"}</h2>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />{user?.primaryEmailAddress?.emailAddress}</span>
-                                {(user?.unsafeMetadata as any)?.college && <span className="flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5" />{(user?.unsafeMetadata as any).college}</span>}
+                                {(user?.unsafeMetadata as CustomMetadata)?.college && <span className="flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5" />{(user?.unsafeMetadata as CustomMetadata).college}</span>}
                                 <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />Joined {user?.createdAt ? formatDate(new Date(user.createdAt).toISOString()) : "N/A"}</span>
                             </div>
                         </div>
@@ -260,34 +266,34 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/30">
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">Degree</p>
-                                <p className="font-semibold">{((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.degree || "Not set"}</p>
+                                <p className="font-semibold">{((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.degree || "Not set"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">Branch</p>
-                                <p className="font-semibold">{((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.branch || "Not set"}</p>
+                                <p className="font-semibold">{((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.branch || "Not set"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">CGPA</p>
-                                <p className="font-semibold">{((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.currentCGPA || "N/A"}</p>
+                                <p className="font-semibold">{((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.currentCGPA || "N/A"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">Skills</p>
-                                <p className="font-semibold truncate" title={((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.skills}>{((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.skills || "None"}</p>
+                                <p className="font-semibold truncate" title={((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.skills}>{((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.skills || "None"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">12th Grade</p>
-                                <p className="font-semibold">{((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.twelfthMarks || "N/A"}</p>
+                                <p className="font-semibold">{((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.twelfthMarks || "N/A"}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <p className="text-xs text-muted-foreground">Backlogs</p>
-                                <p className={`font-semibold ${Number(((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.backlogs) > 0 ? "text-destructive" : "text-success"}`}>
-                                    {((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.backlogs || "0"}
+                                <p className={`font-semibold ${Number(((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.backlogs) > 0 ? "text-destructive" : "text-success"}`}>
+                                    {((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.backlogs || "0"}
                                 </p>
                             </div>
-                            {((user?.unsafeMetadata as any)?.academic as AcademicProfile)?.resumeLink && (
+                            {((user?.unsafeMetadata as CustomMetadata)?.academic as AcademicProfile)?.resumeLink && (
                                 <div className="col-span-full mt-2">
                                     <a
-                                        href={((user?.unsafeMetadata as any).academic as AcademicProfile).resumeLink}
+                                        href={((user?.unsafeMetadata as CustomMetadata).academic as AcademicProfile).resumeLink}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="text-sm text-primary hover:underline flex items-center gap-1"

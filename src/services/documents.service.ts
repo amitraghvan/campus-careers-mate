@@ -144,7 +144,7 @@ export const documentsService = {
 
     async saveQuizResult(
         documentId: string,
-        data: { questions: any; score: number; totalQuestions: number },
+        data: { questions: QuizQuestion[]; score: number; totalQuestions: number },
     ): Promise<QuizResultData> {
         return api.post<QuizResultData>(
             `/documents/${documentId}/quiz-results`,

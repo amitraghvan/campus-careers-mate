@@ -99,7 +99,9 @@ export default function ResumePage() {
                     const res = await resumeService.createResume(resume.personalInfo.name ? `${resume.personalInfo.name}'s Resume` : "My Resume", resume);
                     setCurrentId(res.id);
                 }
-            } catch (e) { }
+            } catch (e) {
+                console.error("Auto-save failed", e);
+            }
         }, 1500);
 
         return () => clearTimeout(timer);
@@ -614,7 +616,7 @@ export default function ResumePage() {
                                             <label className="text-xs text-muted-foreground mb-1 block">Professional Font Family</label>
                                             <select
                                                 value={resume.theme?.fontFamily || "'Inter', sans-serif"}
-                                                onChange={e => setResume(prev => ({ ...prev, theme: { ...prev.theme, fontFamily: e.target.value } as any }))}
+                                                onChange={e => setResume(prev => ({ ...prev, theme: { ...prev.theme, fontFamily: e.target.value } as NonNullable<ResumeData["theme"]> }))}
                                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary/50 outline-none"
                                             >
                                                 <option value="'Inter', sans-serif">Inter (Modern Sans)</option>
@@ -636,7 +638,7 @@ export default function ResumePage() {
                                                 max="18"
                                                 step="1"
                                                 value={resume.theme?.fontSize || 14}
-                                                onChange={e => setResume(prev => ({ ...prev, theme: { ...prev.theme, fontSize: parseInt(e.target.value) } as any }))}
+                                                onChange={e => setResume(prev => ({ ...prev, theme: { ...prev.theme, fontSize: parseInt(e.target.value) } as NonNullable<ResumeData["theme"]> }))}
                                                 className="w-full accent-primary"
                                             />
                                         </div>
@@ -645,7 +647,7 @@ export default function ResumePage() {
                                             <input
                                                 type="color"
                                                 value={resume.theme?.color || "#000000"}
-                                                onChange={e => setResume(prev => ({ ...prev, theme: { ...prev.theme, color: e.target.value } as any }))}
+                                                onChange={e => setResume(prev => ({ ...prev, theme: { ...prev.theme, color: e.target.value } as NonNullable<ResumeData["theme"]> }))}
                                                 className="w-full h-10 bg-black/20 border border-white/10 rounded-xl p-1 cursor-pointer"
                                             />
                                             <p className="text-[10px] text-muted-foreground mt-1">Select pitch-black (#000000) for standard ATS.</p>
