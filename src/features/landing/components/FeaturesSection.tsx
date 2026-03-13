@@ -91,23 +91,23 @@ const BENEFITS = [
 const TESTIMONIALS = [
   {
     img: "https://i.pravatar.cc/150?u=10",
-    name: "Priya Sharma",
-    role: "SDE at Amazon",
-    text: "SecuraAI's opportunity tracker kept me organized across 30+ companies. I never missed a single deadline.",
+    name: "Aarav Singh",
+    role: "B.Tech CSE at LPU",
+    text: "PlaceTrack completely changed how I prep. The AI Resume Analyzer helped me clear the ATS for my dream internship. Honestly, lifesaver.",
     active: false,
   },
   {
     img: "https://i.pravatar.cc/150?u=11",
-    name: "Daniel Reed",
-    role: "Placed at Google",
-    text: "The AI resume builder and interview prep tools completely transformed my placement game. Highly recommend.",
+    name: "Neha Reddy",
+    role: "Placed at TCS | LPU Alumni",
+    text: "Tracking 50+ applications used to be a mess in Excel. The opportunity tracker combined with the AI mock exams got me placed way faster.",
     active: true,
   },
   {
     img: "https://i.pravatar.cc/150?u=12",
-    name: "Marcus Lin",
-    role: "Product Manager at Flipkart",
-    text: "From tracking applications to preparing answers — SecuraAI was my one-stop platform for placements.",
+    name: "Rohan Kapoor",
+    role: "Pre-Final Year, LPU",
+    text: "The AI Code Explainer is insane. It's like having a senior dev sitting next to me during late-night competitive programming sessions.",
     active: false,
   },
 ];
