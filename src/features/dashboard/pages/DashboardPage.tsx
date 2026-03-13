@@ -40,6 +40,33 @@ export default function DashboardPage() {
           <PeersLikeYouWidget />
         </motion.div>
 
+        {/* AI Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.09 }}
+          className="grid sm:grid-cols-2 gap-4"
+        >
+          <a href="/homework" className="glass-card p-4 rounded-xl flex items-center gap-4 hover:ring-1 hover:ring-primary/50 transition-all group">
+            <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <svg className="h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8c.9 0 1.8-.7 2-1.6l1.7-7.4"/><path d="m9 11 1 9"/><path d="M4.5 15.5h15"/><path d="m15 11-1 9"/></svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">AI Homework Solver</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Step-by-step solutions for any subject</p>
+            </div>
+          </a>
+          <a href="/code-explainer" className="glass-card p-4 rounded-xl flex items-center gap-4 hover:ring-1 hover:info/50 transition-all group">
+            <div className="h-10 w-10 shrink-0 rounded-lg bg-info/10 flex items-center justify-center group-hover:bg-info/20 transition-colors">
+              <svg className="h-5 w-5 text-info" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">AI Code Explainer</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Debug & understand code instantly</p>
+            </div>
+          </a>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

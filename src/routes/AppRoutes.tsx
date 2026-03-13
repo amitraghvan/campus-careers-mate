@@ -23,6 +23,8 @@ const ProfilePage = lazy(() => import("@/features/profile/pages/ProfilePage"));
 const NotFoundPage = lazy(() => import("@/routes/pages/NotFoundPage"));
 const DocumentsPage = lazy(() => import("@/features/documents/pages/DocumentsPage"));
 const ResumePage = lazy(() => import("@/features/resume/pages/ResumePage"));
+const HomeworkSolverPage = lazy(() => import("@/features/homework/pages/HomeworkSolverPage"));
+const CodeExplainerPage = lazy(() => import("@/features/homework/pages/CodeExplainerPage"));
 
 function PageLoader() {
   return (
@@ -61,6 +63,8 @@ export function AppRoutes() {
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/resume" element={<ResumePage />} />
+          <Route path="/homework" element={<HomeworkSolverPage />} />
+          <Route path="/code-explainer" element={<CodeExplainerPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 

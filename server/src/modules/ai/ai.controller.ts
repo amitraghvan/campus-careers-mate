@@ -102,4 +102,49 @@ export class AiController {
         );
         return result;
     }
+
+    // ── Homework Solver Endpoints ────────────────────────────────────
+
+    @Post('homework-solver')
+    async solveHomework(@Body() body: { question: string }) {
+        const solution = await this.aiService.solveHomework(body.question || '');
+        return { solution };
+    }
+
+    @Post('homework-follow-up')
+    async homeworkFollowUp(
+        @Body()
+        body: {
+            originalQuestion: string;
+            previousSolution: string;
+            followUp: string;
+        },
+    ) {
+        const answer = await this.aiService.homeworkFollowUp(
+            body.originalQuestion,
+            body.previousSolution,
+            body.followUp,
+        );
+        return { answer };
+    }
+
+    // ── Code Explainer Endpoints ─────────────────────────────────────
+
+    @Post('code-explainer')
+    async explainCode(@Body() body: { language: string; code: string }) {
+        const explanation = await this.aiService.explainCode(
+            body.language || 'Code',
+            body.code || '',
+        );
+        return { explanation };
+    }
+
+    @Post('code-debugger')
+    async debugCode(@Body() body: { language: string; code: string }) {
+        const result = await this.aiService.debugCode(
+            body.language || 'Code',
+            body.code || '',
+        );
+        return result; // returns { error, fixed_code }
+    }
 }

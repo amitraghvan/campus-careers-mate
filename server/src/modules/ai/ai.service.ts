@@ -214,4 +214,70 @@ Return ONLY valid JSON, no markdown, no explanation.`,
             };
         }
     }
+
+    // ── Homework Solver ────────────────────────────────────────────
+
+    async solveHomework(question: string): Promise<string> {
+        return this.complete(
+            `You are an expert tutor with deep knowledge in mathematics, science, programming, and all academic subjects.
+When solving a problem:
+1. Break it into clear, numbered steps.
+2. Explain the reasoning behind each step.
+3. Use simple language — assume the student is learning.
+4. At the very end, clearly state: "✅ Final Answer: <answer>"
+5. For coding questions, include commented code examples.
+6. For math, show all working clearly.
+Keep it structured and easy to follow.`,
+            `Solve this problem step by step:\n\n${question}`,
+        );
+    }
+
+    async homeworkFollowUp(
+        originalQuestion: string,
+        previousSolution: string,
+        followUp: string,
+    ): Promise<string> {
+        const systemPrompt = `You are an expert tutor. The student already received a solution and is asking a follow-up question. Be concise, helpful, and refer back to the previous solution where relevant.`;
+        const userPrompt = `Original question:\n${originalQuestion}\n\nPrevious solution:\n${previousSolution}\n\nFollow-up question:\n${followUp}`;
+        return this.complete(systemPrompt, userPrompt);
+    }
+
+    // ── Code Explainer & Debugger ──────────────────────────────────
+
+    async explainCode(language: string, code: string): Promise<string> {
+        return this.complete(
+            `You are an expert programming teacher. 
+When explaining code:
+1. Break down what the code does step by step.
+2. Use simple, clear language.
+3. If relevant, explain the time/space complexity.
+4. Keep the tone encouraging and academic.`,
+            `Explain this ${language} code step by step:\n\n\`\`\`${language}\n${code}\n\`\`\``,
+        );
+    }
+
+    async debugCode(language: string, code: string): Promise<{ error: string; fixed_code: string }> {
+        const result = await this.complete(
+            `You are an expert programming debugger.
+Identify the error(s) in the provided code and fix it.
+Return ONLY a valid JSON object with exactly these two keys:
+{
+  "error": "<description of what was wrong>",
+  "fixed_code": "<the fully corrected code snippet without any markdown formatting around it>"
+}
+No other text. Just the JSON.`,
+            `Debug this ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\``,
+        );
+
+        try {
+            const jsonMatch = result.match(/\{[\s\S]*\}/);
+            if (jsonMatch) return JSON.parse(jsonMatch[0]);
+            return JSON.parse(result);
+        } catch {
+            return {
+                error: 'Could not automatically debug this code. The error description or code might be too complex for the current model.',
+                fixed_code: code,
+            };
+        }
+    }
 }
