@@ -26,6 +26,7 @@ import {
     BrainCircuit,
     TerminalSquare,
     FileQuestion,
+    BookOpen,
 } from "lucide-react";
 import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
@@ -41,6 +42,7 @@ const NAV_ITEMS = [
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
     { to: "/notes", icon: StickyNote, label: "Notes" },
+    { to: "/ai-study-planner", icon: BookOpen, label: "AI Study Planner" },
     { to: "/documents", icon: FileText, label: "AI Learning Hub" },
     { to: "/homework", icon: BrainCircuit, label: "Homework Solver" },
     { to: "/code-explainer", icon: TerminalSquare, label: "Code Explainer" },

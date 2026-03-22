@@ -114,6 +114,56 @@ export class AiService {
         }
     }
 
+    // ── AI Study Planner ─────────────────────────────────────────────
+
+    async generateStudyPlan(input: any): Promise<any> {
+        const { goal, subjects, examDate, dailyHours, level } = input;
+        
+        const systemPrompt = `You are an expert AI Study Planner.
+Generate a comprehensive, day-by-day schedule based on the user's goals.
+You MUST return ONLY a valid JSON object matching the exact schema provided. Do not wrap in markdown or explain.
+
+Schema:
+{
+  "dailyPlan": [
+    {
+      "day": number,
+      "date": "MMM do, yyyy",
+      "topics": [{ "taskId": "string", "title": "string", "completed": false }],
+      "hours": number
+    }
+  ],
+  "weeklyGoals": ["string"],
+  "focusAreas": ["string"]
+}
+
+Guidelines:
+- Create a realistic plan leading up to: ${examDate}
+- Limit daily hours to: ${dailyHours}
+- Skill level: ${level}
+- Target Goal: ${goal}
+- Subjects: ${subjects.join(", ")}
+- Ensure every topic has a unique \`taskId\` (e.g., "day1-topic1").
+- Start dates from tomorrow. Keep the plan to max 14 days to prevent overly large returns.`;
+
+        const response = await this.groq.chat.completions.create({
+            messages: [{ role: 'system', content: systemPrompt }],
+            model: 'llama-3.1-8b-instant',
+            temperature: 0.7,
+            max_tokens: 3000,
+            response_format: { type: "json_object" },
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) throw new Error("Failed to generate plan.");
+
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            throw new Error("AI returned invalid JSON.");
+        }
+    }
+
     // ── Resume AI Methods ──────────────────────────────────────────
 
     async enhanceResumeBullets(section: string, bullets: string[]): Promise<string[]> {

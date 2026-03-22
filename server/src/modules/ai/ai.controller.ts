@@ -5,6 +5,7 @@
 import { Controller, Post, Body, Req } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { DocumentsService } from '../documents/documents.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('ai')
 export class AiController {
@@ -77,8 +78,18 @@ export class AiController {
         return { questions };
     }
 
+    // ── AI Study Planner Endpoints ───────────────────────────────────
+
+    @Public()
+    @Post('study-planner/generate')
+    async generateStudyPlan(@Body() body: any) {
+        const plan = await this.aiService.generateStudyPlan(body);
+        return plan;
+    }
+
     // ── Resume AI Endpoints ──────────────────────────────────────────
 
+    @Public()
     @Post('resume/enhance-bullets')
     async enhanceBullets(@Body() body: { section: string; bullets: string[] }) {
         const enhanced = await this.aiService.enhanceResumeBullets(
@@ -88,12 +99,14 @@ export class AiController {
         return { bullets: enhanced };
     }
 
+    @Public()
     @Post('resume/generate-summary')
     async generateResumeSummary(@Body() body: { resumeData: any }) {
         const summary = await this.aiService.generateResumeSummary(body.resumeData || {});
         return { summary };
     }
 
+    @Public()
     @Post('resume/ats-score')
     async atsScore(@Body() body: { resumeData: any; jobDescription?: string }) {
         const result = await this.aiService.analyzeATSScore(
@@ -105,12 +118,14 @@ export class AiController {
 
     // ── Homework Solver Endpoints ────────────────────────────────────
 
+    @Public()
     @Post('homework-solver')
     async solveHomework(@Body() body: { question: string }) {
         const solution = await this.aiService.solveHomework(body.question || '');
         return { solution };
     }
 
+    @Public()
     @Post('homework-follow-up')
     async homeworkFollowUp(
         @Body()
@@ -130,6 +145,7 @@ export class AiController {
 
     // ── Code Explainer Endpoints ─────────────────────────────────────
 
+    @Public()
     @Post('code-explainer')
     async explainCode(@Body() body: { language: string; code: string }) {
         const explanation = await this.aiService.explainCode(
@@ -139,6 +155,7 @@ export class AiController {
         return { explanation };
     }
 
+    @Public()
     @Post('code-debugger')
     async debugCode(@Body() body: { language: string; code: string }) {
         const result = await this.aiService.debugCode(
@@ -150,6 +167,7 @@ export class AiController {
 
     // ── Mock Exam Endpoints ──────────────────────────────────────────
 
+    @Public()
     @Post('mock-exam')
     async generateMockExam(
         @Body()
