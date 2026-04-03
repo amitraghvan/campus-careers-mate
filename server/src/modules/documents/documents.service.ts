@@ -1,11 +1,19 @@
 /**
  * Documents Service — handles PDF storage and text extraction.
+ *
+ * Security:
+ *  - Stored filenames are pure UUIDs. The original filename is NEVER used
+ *    in filesystem paths (prevents path-traversal and filename-injection).
+ *  - PDF magic bytes (%PDF) are verified before writing to disk.
+ *  - The resolved absolute path is checked to ensure it stays within
+ *    the uploads directory (defense-in-depth against traversal).
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 // pdf-parse@1.1.1 exports a plain function via CJS
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -26,6 +34,18 @@ export class DocumentsService {
     }
 
     async uploadDocument(userId: string, file: Express.Multer.File) {
+        // ── Security: Validate file type by MIME type ─────────────────────
+        if (file.mimetype !== 'application/pdf') {
+            throw new BadRequestException('Only PDF files are accepted.');
+        }
+
+        // ── Security: Verify PDF magic bytes (%PDF header) ──────────────
+        // This prevents disguised files (e.g., a .js file renamed to .pdf)
+        const PDF_MAGIC = Buffer.from([0x25, 0x50, 0x44, 0x46]); // %PDF
+        if (!file.buffer || file.buffer.length < 4 || !file.buffer.slice(0, 4).equals(PDF_MAGIC)) {
+            throw new BadRequestException('File does not appear to be a valid PDF.');
+        }
+
         // Extract text from PDF buffer
         let extractedText = '';
         try {
@@ -35,22 +55,30 @@ export class DocumentsService {
             console.warn('[Documents] Failed to extract text from PDF:', err);
         }
 
-        // Save file to disk
-        const uploadsDir = path.join(process.cwd(), 'uploads');
+        // ── Security: Save file using a pure UUID filename ────────────────
+        // The original filename is NEVER used in the stored path to prevent
+        // path-traversal attacks (e.g., originalname = '../../etc/passwd').
+        const uploadsDir = path.resolve(process.cwd(), 'uploads');
         if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
         }
 
-        const safeFileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const filePath = path.join(uploadsDir, safeFileName);
-        fs.writeFileSync(filePath, file.buffer);
+        const safeFileName = `${uuidv4()}.pdf`;
+        const filePath = path.resolve(uploadsDir, safeFileName);
+
+        // Defense-in-depth: verify the resolved path stays inside uploadsDir
+        if (!filePath.startsWith(uploadsDir + path.sep) && filePath !== uploadsDir) {
+            throw new BadRequestException('Invalid file path detected.');
+        }
+
+        await fs.promises.writeFile(filePath, file.buffer, { mode: 0o640 });
 
         const fileUrl = `/uploads/${safeFileName}`;
 
         const document = await this.prisma.document.create({
             data: {
                 userId,
-                fileName: file.originalname,
+                fileName: file.originalname, // original name stored only in DB for display
                 fileUrl,
                 fileSize: file.size,
                 extractedText,

@@ -14,18 +14,23 @@ import {
     UseInterceptors,
     UploadedFile,
     BadRequestException,
+    UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { DocumentsService } from './documents.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('documents')
 export class DocumentsController {
     constructor(private readonly documentsService: DocumentsService) { }
 
     // ── Learning Stats (MUST be before :id routes) ─
     @Get('stats/learning')
-    async learningStats(@Req() req: any) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
+    async learningStats(@CurrentUser('id') userId: string) {
         return this.documentsService.getLearningStats(userId);
     }
 
@@ -43,9 +48,8 @@ export class DocumentsController {
             },
         }),
     )
-    async upload(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+    async upload(@UploadedFile() file: Express.Multer.File, @CurrentUser('id') userId: string) {
         if (!file) throw new BadRequestException('No file provided');
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
         return this.documentsService.uploadDocument(userId, file);
     }
 
@@ -53,36 +57,31 @@ export class DocumentsController {
     @Patch('flashcards/:flashcardId/favorite')
     async toggleFavorite(
         @Param('flashcardId') flashcardId: string,
-        @Req() req: any,
+        @CurrentUser('id') userId: string,
     ) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
         return this.documentsService.toggleFavorite(flashcardId, userId);
     }
 
     // ── Document List ──────────────────────────────
     @Get()
-    async list(@Req() req: any) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
+    async list(@CurrentUser('id') userId: string) {
         return this.documentsService.listDocuments(userId);
     }
 
     // ── Document by ID ─────────────────────────────
     @Get(':id')
-    async getOne(@Param('id') id: string, @Req() req: any) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
+    async getOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
         return this.documentsService.getDocument(id, userId);
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string, @Req() req: any) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
+    async remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
         return this.documentsService.deleteDocument(id, userId);
     }
 
     // ── Flashcards (by doc Id) ─────────────────────
     @Get(':id/flashcards')
-    async getFlashcards(@Param('id') documentId: string, @Req() req: any) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
+    async getFlashcards(@Param('id') documentId: string, @CurrentUser('id') userId: string) {
         return this.documentsService.getFlashcards(documentId, userId);
     }
 
@@ -91,15 +90,13 @@ export class DocumentsController {
     async saveQuizResult(
         @Param('id') documentId: string,
         @Body() body: { questions: any; score: number; totalQuestions: number },
-        @Req() req: any,
+        @CurrentUser('id') userId: string,
     ) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
         return this.documentsService.saveQuizResult(documentId, userId, body);
     }
 
     @Get(':id/quiz-results')
-    async getQuizResults(@Param('id') documentId: string, @Req() req: any) {
-        const userId = req.user?.id || req.user?.sub || 'anonymous';
+    async getQuizResults(@Param('id') documentId: string, @CurrentUser('id') userId: string) {
         return this.documentsService.getQuizResults(documentId, userId);
     }
 }

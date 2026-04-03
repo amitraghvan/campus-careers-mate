@@ -28,10 +28,19 @@ export class SignUpDto {
   @IsEmail({}, { message: "Please enter a valid email address" })
   email!: string;
 
-  @ApiProperty({ example: "securePassword123" })
+  @ApiProperty({ example: "Secur3P@ssword!" })
   @IsString()
-  @MinLength(8, { message: "Password must be at least 8 characters" })
+  // Security: minimum 12 chars with uppercase, lowercase, digit, and special char.
+  // This prevents weak passwords that are trivially brute-forceable.
+  @MinLength(12, { message: "Password must be at least 12 characters" })
   @MaxLength(128)
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/,
+    {
+      message:
+        "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character (!@#$%^&* etc.)",
+    },
+  )
   password!: string;
 
   @ApiPropertyOptional({ example: "IIT Delhi" })

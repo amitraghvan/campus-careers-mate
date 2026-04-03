@@ -15,9 +15,11 @@ import { Request, Response } from "express";
 
 interface ErrorResponse {
   success: false;
-  statusCode: number;
-  message: string;
-  error: string;
+  error: {
+    code: number;
+    message: string;
+    details?: string;
+  };
   timestamp: string;
   path: string;
   requestId?: string;
@@ -93,9 +95,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const errorResponse: ErrorResponse = {
       success: false,
-      statusCode: status,
-      message,
-      error,
+      error: {
+        code: status,
+        message,
+        details: error !== message ? error : undefined,
+      },
       timestamp: new Date().toISOString(),
       path: request.url,
       requestId: request.headers["x-request-id"] as string,

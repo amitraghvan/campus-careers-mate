@@ -13,10 +13,15 @@ export class RedisService implements OnModuleDestroy {
   private loggedError = false;
 
   constructor(private readonly config: ConfigService) {
+    const tlsEnabled = this.config.get<string>('REDIS_TLS_ENABLED') === 'true';
+
     this.client = new Redis({
       host: this.config.get("REDIS_HOST", "localhost"),
       port: this.config.get<number>("REDIS_PORT", 6379),
       password: this.config.get("REDIS_PASSWORD") || undefined,
+      tls: tlsEnabled ? {} : undefined,
+      enableOfflineQueue: false,
+      enableReadyCheck: true,
       retryStrategy: (times) => {
         if (times > 3) return null as unknown as number; // stop retrying after 3 attempts
         return Math.min(times * 50, 2000);

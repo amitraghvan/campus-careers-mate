@@ -1,9 +1,15 @@
 /**
  * AI Service — Groq LLaMA integration for document intelligence.
  * Runs server-side so the API key stays private.
+ *
+ * Security:
+ *  - All user-supplied free-text is sanitized by sanitizeInput() before
+ *    being embedded in AI prompts. This prevents prompt-injection attacks
+ *    where an attacker crafts input like "Ignore previous instructions…"
+ *    to hijack the model's behaviour or exfiltrate data.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import Groq from 'groq-sdk';
 import { ConfigService } from '@nestjs/config';
 
@@ -15,6 +21,66 @@ export class AiService {
         this.groq = new Groq({
             apiKey: this.config.get<string>('GROQ_API_KEY', ''),
         });
+    }
+
+    /**
+     * Sanitizes user-supplied free-text before it is embedded into AI prompts.
+     *
+     * Protections applied:
+     *  1. Strip null bytes and dangerous control characters.
+     *  2. Enforce a hard length ceiling (defaults to 10,000 chars).
+     *  3. Detect and reject known prompt-injection patterns.
+     *
+     * @throws BadRequestException when the input is unsafe.
+     */
+    private sanitizeInput(value: string, maxLength = 10_000): string {
+        if (typeof value !== 'string') {
+            throw new BadRequestException('Invalid input: expected a string.');
+        }
+
+        // 1. Strip null bytes and non-printable control characters
+        //    (keep \t, \n, \r which are legitimate in code / essay questions)
+        const cleaned = value
+            .replace(/\x00/g, '')
+            .replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+            .trim();
+
+        // 2. Hard length ceiling
+        if (cleaned.length > maxLength) {
+            throw new BadRequestException(
+                `Input too long. Maximum allowed is ${maxLength} characters.`,
+            );
+        }
+
+        // 3. Prompt-injection pattern detection
+        //    These phrases are commonly used to override system prompts.
+        const injectionPatterns: RegExp[] = [
+            /ignore\s+(all\s+)?(previous|prior|above)\s+instructions?/i,
+            /disregard\s+(all\s+)?(previous|prior|above)\s+instructions?/i,
+            /forget\s+(all\s+)?(previous|prior|above)\s+instructions?/i,
+            /you\s+are\s+now\s+(a|an)?/i,
+            /act\s+as\s+(a|an)?\s+[a-z]+/i,
+            /system\s*prompt/i,
+            /reveal\s+(your\s+)?(system|hidden|secret|internal)\s+(prompt|instructions?)/i,
+            /print\s+(your\s+)?(system|hidden|secret|internal)\s+(prompt|instructions?)/i,
+            /output\s+(all\s+)?(env(ironment)?\s+)?(variables?|secrets?|keys?)/i,
+            /((list|show|dump)\s+)?(all\s+)?environment\s+variables?/i,
+            /jailbreak/i,
+            /DAN\s+mode/i,
+            /developer\s+mode\s+(enabled?|on)/i,
+            /bypass\s+(all\s+)?(safety|content|filter)/i,
+            /override\s+(all\s+)?(previous|prior|above)\s+(instructions?|guidelines?|rules?)/i,
+        ];
+
+        for (const pattern of injectionPatterns) {
+            if (pattern.test(cleaned)) {
+                throw new BadRequestException(
+                    'Invalid input: potentially unsafe content detected.',
+                );
+            }
+        }
+
+        return cleaned;
     }
 
     private async complete(systemPrompt: string, userPrompt: string): Promise<string> {
@@ -36,6 +102,7 @@ export class AiService {
         question: string,
         history: { role: string; content: string }[] = [],
     ): Promise<string> {
+        const safeQuestion = this.sanitizeInput(question, 2000);
         const systemPrompt = `You are a helpful study assistant. Answer questions using ONLY the following document context. If the answer is not in the document, say so clearly.\n\n--- DOCUMENT ---\n${extractedText.slice(0, 12000)}\n--- END ---`;
 
         const messages: any[] = [
@@ -44,7 +111,52 @@ export class AiService {
                 role: h.role === 'model' ? 'assistant' : h.role,
                 content: h.content,
             })),
-            { role: 'user', content: question },
+            { role: 'user', content: safeQuestion },
+        ];
+
+        const response = await this.groq.chat.completions.create({
+            messages,
+            model: 'llama-3.1-8b-instant',
+            temperature: 0.7,
+            max_tokens: 1024,
+        });
+
+        return response.choices[0]?.message?.content || 'No response generated.';
+    }
+
+    async generalChat(
+        question: string,
+        history: { role: string; content: string }[] = [],
+    ): Promise<string> {
+        const safeQuestion = this.sanitizeInput(question, 2000);
+        const systemPrompt = `You are PlaceTrack AI — a friendly, helpful placement preparation assistant for Indian college students.
+
+Your expertise:
+- Campus placement strategies and timelines
+- Interview preparation (HR, technical, case studies)
+- Resume and cover letter tips
+- DSA and coding interview preparation
+- Company-specific interview insights (FAANG, startups, service companies)
+- Salary negotiation and offer evaluation
+- Soft skills and communication tips
+- Aptitude and reasoning test preparation
+
+Rules:
+- Be concise but helpful. Use bullet points when listing things.
+- Use encouraging language — placement season is stressful!
+- If asked about non-placement topics, politely redirect.
+- Use examples relevant to Indian campus placements.
+- Reply in the same language the user writes in (Hindi, English, Hinglish, etc.)
+- Keep responses under 300 words unless specifically asked for detail.
+- Use emojis sparingly to keep things friendly 🎯`;
+
+        const messages: any[] = [
+            { role: 'system', content: systemPrompt },
+            ...history.map((h) => ({
+                role: h.role === 'model' ? 'assistant' : h.role,
+                content: h.content,
+            })),
+            { role: 'user', content: safeQuestion },
         ];
 
         const response = await this.groq.chat.completions.create({
@@ -65,9 +177,10 @@ export class AiService {
     }
 
     async explainConcept(extractedText: string, topic: string): Promise<string> {
+        const safeTopic = this.sanitizeInput(topic, 500);
         return this.complete(
             'You are a patient, thorough teacher. Explain concepts from the document in detail with examples.',
-            `From this document:\n\n${extractedText.slice(0, 12000)}\n\nExplain the concept of: "${topic}"`,
+            `From this document:\n\n${extractedText.slice(0, 12000)}\n\nExplain the concept of: "${safeTopic}"`,
         );
     }
 
@@ -268,6 +381,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
     // ── Homework Solver ────────────────────────────────────────────
 
     async solveHomework(question: string): Promise<string> {
+        const safeQuestion = this.sanitizeInput(question, 5000);
         return this.complete(
             `You are an expert tutor with deep knowledge in mathematics, science, programming, and all academic subjects.
 When solving a problem:
@@ -278,7 +392,7 @@ When solving a problem:
 5. For coding questions, include commented code examples.
 6. For math, show all working clearly.
 Keep it structured and easy to follow.`,
-            `Solve this problem step by step:\n\n${question}`,
+            `Solve this problem step by step:\n\n${safeQuestion}`,
         );
     }
 
@@ -287,14 +401,19 @@ Keep it structured and easy to follow.`,
         previousSolution: string,
         followUp: string,
     ): Promise<string> {
+        const safeOriginal  = this.sanitizeInput(originalQuestion, 5000);
+        const safeSolution  = this.sanitizeInput(previousSolution, 10000);
+        const safeFollowUp  = this.sanitizeInput(followUp, 2000);
         const systemPrompt = `You are an expert tutor. The student already received a solution and is asking a follow-up question. Be concise, helpful, and refer back to the previous solution where relevant.`;
-        const userPrompt = `Original question:\n${originalQuestion}\n\nPrevious solution:\n${previousSolution}\n\nFollow-up question:\n${followUp}`;
+        const userPrompt = `Original question:\n${safeOriginal}\n\nPrevious solution:\n${safeSolution}\n\nFollow-up question:\n${safeFollowUp}`;
         return this.complete(systemPrompt, userPrompt);
     }
 
     // ── Code Explainer & Debugger ──────────────────────────────────
 
     async explainCode(language: string, code: string): Promise<string> {
+        const safeLang = this.sanitizeInput(language, 100);
+        const safeCode = this.sanitizeInput(code, 10000);
         return this.complete(
             `You are an expert programming teacher. 
 When explaining code:
@@ -302,11 +421,13 @@ When explaining code:
 2. Use simple, clear language.
 3. If relevant, explain the time/space complexity.
 4. Keep the tone encouraging and academic.`,
-            `Explain this ${language} code step by step:\n\n\`\`\`${language}\n${code}\n\`\`\``,
+            `Explain this ${safeLang} code step by step:\n\n\`\`\`${safeLang}\n${safeCode}\n\`\`\``,
         );
     }
 
     async debugCode(language: string, code: string): Promise<{ error: string; fixed_code: string }> {
+        const safeLang = this.sanitizeInput(language, 100);
+        const safeCode = this.sanitizeInput(code, 10000);
         const result = await this.complete(
             `You are an expert programming debugger.
 Identify the error(s) in the provided code and fix it.
@@ -316,7 +437,7 @@ Return ONLY a valid JSON object with exactly these two keys:
   "fixed_code": "<the fully corrected code snippet without any markdown formatting around it>"
 }
 No other text. Just the JSON.`,
-            `Debug this ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\``,
+            `Debug this ${safeLang} code:\n\n\`\`\`${safeLang}\n${safeCode}\n\`\`\``,
         );
 
         try {
@@ -354,12 +475,16 @@ Return ONLY a valid JSON object in the exact following format, with NO extra mar
   ]
 }`;
 
-        const contextPart = uploadedContent
-            ? `\n\nReference Material:\n${uploadedContent.substring(0, 15000)}`
+        const safeSubject    = this.sanitizeInput(subject, 100);
+        const safeTopic      = this.sanitizeInput(topic, 200);
+        const safeContent    = uploadedContent ? this.sanitizeInput(uploadedContent, 15000) : undefined;
+
+        const contextPart = safeContent
+            ? `\n\nReference Material:\n${safeContent}`
             : '';
 
-        const userPrompt = `Generate a mock exam for the subject: ${subject}.
-Topic: ${topic}.
+        const userPrompt = `Generate a mock exam for the subject: ${safeSubject}.
+Topic: ${safeTopic}.
 Difficulty level: ${difficulty}.
 Number of questions: ${questionCount}.${contextPart}
 

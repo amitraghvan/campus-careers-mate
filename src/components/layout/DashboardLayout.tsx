@@ -3,7 +3,7 @@
  * Wraps all protected pages with a consistent navigation sidebar.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,8 @@ import {
     TerminalSquare,
     FileQuestion,
     BookOpen,
+    Zap,
+    Flame,
 } from "lucide-react";
 import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
@@ -34,10 +36,14 @@ import { cn } from "@/lib/utils";
 import { OpportunityProvider } from "@/features/opportunities/contexts/OpportunityContext";
 import { MomentumProvider } from "@/features/dashboard/contexts/MomentumContext";
 
+// Simulated live peer presence counters (real values come from backend/WebSocket)
+const PEER_ONLINE_COUNT = 24;
+const PEER_AI_MATCHES = 3;
+
 const NAV_ITEMS = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { to: "/explore", icon: Globe, label: "Explore" },
-    { to: "/network", icon: Users, label: "Peer Connect" },
+    { to: "/network", icon: Users, label: "Peer Connect", special: true },
     { to: "/pipeline", icon: Mail, label: "Cold Email" },
     { to: "/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/calendar", icon: CalendarDays, label: "Calendar" },
@@ -116,7 +122,10 @@ export default function DashboardLayout() {
                         {/* Navigation */}
                         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
                             {NAV_ITEMS.map((item) => {
-                                const isActive = location.pathname === item.to;
+                                const isActive = location.pathname === item.to ||
+                                    (item.to === "/network" && location.pathname.startsWith("/network"));
+                                const isSpecial = 'special' in item && item.special;
+
                                 return (
                                     <NavLink
                                         key={item.to}
@@ -138,12 +147,49 @@ export default function DashboardLayout() {
                                             />
                                         )}
                                         <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary")} />
-                                        {!collapsed && (
+
+                                        {/* Special Peer Connect label with live badges */}
+                                        {!collapsed && isSpecial ? (
+                                            <div className="flex flex-1 items-center justify-between min-w-0">
+                                                <span className="whitespace-nowrap">{item.label}</span>
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 text-[9px] font-semibold">
+                                                        <Flame className="h-2.5 w-2.5" />{PEER_ONLINE_COUNT}
+                                                    </span>
+                                                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 text-[9px] font-semibold">
+                                                        <Zap className="h-2.5 w-2.5" />{PEER_AI_MATCHES}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ) : !collapsed ? (
                                             <span className="whitespace-nowrap">{item.label}</span>
-                                        )}
+                                        ) : null}
+
+                                        {/* Collapsed tooltip */}
                                         {collapsed && (
                                             <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                                                {item.label}
+                                                {isSpecial
+                                                    ? <>
+                                                        {item.label}
+                                                        <span className="ml-1.5 text-orange-400">🔥{PEER_ONLINE_COUNT}</span>
+                                                        <span className="ml-1 text-violet-400">⚡{PEER_AI_MATCHES}</span>
+                                                    </>
+                                                    : item.label
+                                                }
+                                            </div>
+                                        )}
+
+                                        {/* Hover preview card for Peer Connect (non-collapsed) */}
+                                        {!collapsed && isSpecial && (
+                                            <div className="absolute left-full ml-3 top-0 w-52 p-3 bg-popover border border-border/50 rounded-xl shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 z-50 space-y-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                                                    <span className="text-xs font-medium">{PEER_ONLINE_COUNT} peers online</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground space-y-1">
+                                                    <div>⚡ {PEER_AI_MATCHES} high match peers found</div>
+                                                    <div>🤝 1 squad invite pending</div>
+                                                </div>
                                             </div>
                                         )}
                                     </NavLink>

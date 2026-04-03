@@ -11,6 +11,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { Request } from "express";
 import { AuthService } from "./auth.service";
@@ -26,6 +27,9 @@ export class AuthController {
 
   @Post("signup")
   @Public()
+  @HttpCode(HttpStatus.CREATED)
+  // Security: 3 signup attempts per 10 minutes per IP — prevents account spam
+  @Throttle({ default: { limit: 3, ttl: 600_000 } })
   @ApiOperation({ summary: "Register a new account" })
   async signUp(@Body() dto: SignUpDto, @Req() req: Request) {
     return this.authService.signUp(
@@ -38,6 +42,8 @@ export class AuthController {
   @Post("signin")
   @Public()
   @HttpCode(HttpStatus.OK)
+  // Security: 5 signin attempts per 5 minutes per IP — blocks credential stuffing
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
   @ApiOperation({ summary: "Sign in with email and password" })
   async signIn(@Body() dto: SignInDto, @Req() req: Request) {
     return this.authService.signIn(
@@ -50,6 +56,8 @@ export class AuthController {
   @Post("refresh")
   @Public()
   @HttpCode(HttpStatus.OK)
+  // Security: 10 refresh attempts per minute — prevents refresh-token brute force
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({ summary: "Refresh access token using refresh token" })
   async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
     return this.authService.refreshTokens(

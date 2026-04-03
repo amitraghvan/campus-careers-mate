@@ -4,6 +4,10 @@ import { api } from "@/lib/api";
 // Module-level cache for getPeerById lookups
 let peerCache: Peer[] = [];
 
+/** Synchronous lookup from cache (populated after the first getPeers() call) */
+const getPeerById = (id: string): Peer | null =>
+    peerCache.find(p => p.id === id) ?? null;
+
 // Helper to generate initials from a name (e.g. "John Doe" -> "JD")
 const getInitials = (name: string): string => {
     if (!name || name === "Unknown") return "??";
@@ -198,3 +202,7 @@ export const peerService = {
         };
     }
 };
+
+
+export { getPeerById };
+

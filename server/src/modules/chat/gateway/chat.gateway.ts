@@ -6,55 +6,93 @@ import {
   OnGatewayDisconnect,
   ConnectedSocket,
   MessageBody,
+  OnGatewayInit,
 } from '@nestjs/websockets';
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from '../services/chat.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // Adjust in production
+    /**
+     * Security: Never allow all origins.
+     * The actual origin check is performed via the `handleConnection` guard
+     * and the allowedOrigins list below from ConfigService.
+     * Socket.io still needs a permissive cors setting here so it can
+     * accept the upgrade, but we enforce it at the connection level.
+     */
+    origin: (origin: string, callback: (err: Error | null, allow: boolean) => void) => {
+      // Evaluated at gateway init time — see constructor for allowedOrigins.
+      callback(null, true); // Per-connection auth is enforced in handleConnection
+    },
+    credentials: true,
   },
   namespace: 'chat',
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
+
+  private readonly logger = new Logger(ChatGateway.name);
+  private readonly allowedOrigins: string[];
 
   constructor(
     private jwtService: JwtService,
     private chatService: ChatService,
-  ) { }
+    private config: ConfigService,
+  ) {
+    // Build the origin allowlist once at construction time
+    const rawOrigins = this.config.get<string>('CORS_ORIGIN', 'http://localhost:5173');
+    this.allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
+  }
 
-  afterInit(server: Server) {
-    console.log('ChatGateway initialized');
+  afterInit(_server: Server) {
+    this.logger.log('ChatGateway initialized');
   }
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
-      if (!token) {
-        console.log('No token provided, disconnecting...');
-        client.disconnect();
+      // ── Origin check ────────────────────────────────────────────────
+      const origin = client.handshake.headers.origin;
+      const isDev = this.config.get<string>('NODE_ENV') === 'development';
+      const isLocalhost = origin?.match(/^http:\/\/localhost:\d+$/);
+
+      if (origin && !this.allowedOrigins.includes(origin) && !(isDev && isLocalhost)) {
+        this.logger.warn(`WebSocket blocked from unauthorized origin: ${origin}`);
+        client.disconnect(true);
         return;
       }
 
-      // Verify token
-      const payload = this.jwtService.verify(token);
-      client.data.user = payload; // Attach user to socket
+      // ── JWT verification ────────────────────────────────────────────
+      const token =
+        client.handshake.auth.token ||
+        client.handshake.headers.authorization?.split(' ')[1];
 
-      // Join user to their own room for targeted messages
+      if (!token) {
+        this.logger.warn('WebSocket: no token provided, disconnecting.');
+        client.disconnect(true);
+        return;
+      }
+
+      // Security: pin algorithm to HS256 to prevent algorithm-confusion attacks
+      // (e.g., alg:none bypass or RS256→HS256 confusion)
+      const payload = this.jwtService.verify(token, { algorithms: ['HS256'] });
+      client.data.user = payload;
+
+      // Join user's personal room for targeted notifications
       client.join(`user_${payload.sub}`);
 
-      console.log(`Client connected: ${client.id}, User: ${payload.sub}`);
+      this.logger.debug(`WS connected: clientId=${client.id} userId=${payload.sub}`);
     } catch (e) {
-      console.error('WebSocket connection failed:', (e as Error).message);
-      client.disconnect();
+      this.logger.warn(`WS auth failed: ${(e as Error).message}`);
+      client.disconnect(true);
     }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`User disconnected: ${client.data.user?.userId}`);
+    this.logger.debug(`WS disconnected: clientId=${client.id} userId=${client.data.user?.sub}`);
   }
 
   @SubscribeMessage('joinConversation')

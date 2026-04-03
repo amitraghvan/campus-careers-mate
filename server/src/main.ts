@@ -1,7 +1,7 @@
 /**
  * ╔══════════════════════════════════════════════════╗
  * ║        Application Entry Point                   ║
- * ║  Bootstrap NestJS with all production configs    ║
+ * ║  Bootstrap NestJS with enterprise-grade security   ║
  * ╚══════════════════════════════════════════════════╝
  */
 
@@ -19,6 +19,9 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { WinstonLogger } from "./common/logger/winston.logger";
+import { SecurityHeadersMiddleware } from "./common/middleware/security-headers.middleware";
+import { csrfTokenMiddleware } from "./common/middleware/csrf.middleware";
+import { AppConfig } from "./config/env.validation";
 
 async function bootstrap() {
   const logger = new WinstonLogger();
@@ -26,118 +29,242 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger,
     bufferLogs: true,
+    bodyParser: false, // Disable default, configure below
   });
 
   const config = app.get(ConfigService);
-  const port = config.get<number>("PORT", 3000);
-  const rawPrefix = config.get<string>("API_PREFIX", "api");
-  const prefix = rawPrefix.endsWith("/v1") ? rawPrefix.replace(/\/v1$/, "") : rawPrefix;
-  const corsOrigin = config.get<string>("CORS_ORIGIN", "http://localhost:8080");
+  const appConfig = config.get<AppConfig>("app");
 
-  // ── Security ────────────────────────────────────
+  const port = config.get<number>("PORT", 3000);
+  const prefix = config.get<string>("API_PREFIX", "api");
+  const corsOrigins = config.get<string[]>("app.corsOrigins", ["http://localhost:5173"]);
+  const isDevelopment = config.get<string>("NODE_ENV") === "development";
+  const isProduction = config.get<string>("NODE_ENV") === "production";
+
+  // ── Security: Body Parser Limits ─────────────────
+  app.use(express.json({
+    limit: "10kb",
+    strict: true, // Only accept objects/arrays
+  }));
+  app.use(express.urlencoded({
+    extended: true,
+    limit: "10kb",
+  }));
+
+  // ── Security: Helmet Configuration ─────────────────
   app.use(
     helmet({
-      // Disable CSP and frameguard so the PDF iframe viewer can load
-      // files served from this same server (localhost:3000/uploads/...)
-      contentSecurityPolicy: false,
-      frameguard: false,
-      crossOriginResourcePolicy: { policy: "cross-origin" },
-      crossOriginEmbedderPolicy: false,
-    }),
+      contentSecurityPolicy: isProduction ? {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"], // Required for some React patterns
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'", "https://api.groq.com"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      } : false,
+      hsts: isProduction ? {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true,
+      } : false,
+      frameguard: {
+        action: "deny",
+      },
+      crossOriginEmbedderPolicy: false, // Required for PDF compatibility
+      crossOriginResourcePolicy: {
+        policy: "cross-origin",
+      },
+      dnsPrefetchControl: {
+        allow: false,
+      },
+      referrerPolicy: {
+        policy: "strict-origin-when-cross-origin",
+      },
+      hidePoweredBy: true,
+      ieNoOpen: true,
+      noSniff: true,
+      originAgentCluster: true,
+      permittedCrossDomainPolicies: {
+        permittedPolicies: "none",
+      },
+      xssFilter: true,
+    })
   );
+
+  // ── Security: Custom Security Headers ──────────────
+  app.use(new SecurityHeadersMiddleware().use);
+
+  // ── Security: Compression (after security headers) ─
   app.use(compression());
-  app.use(cookieParser());
 
-  // ── Serve uploaded files ────────────────────────
-  app.use("/uploads", express.static(join(process.cwd(), "uploads")));
+  // ── Security: Cookie Parser with Secrets ───────────
+  const cookieSecret = config.get<string>("COOKIE_SECRET");
+  if (cookieSecret) {
+    app.use(cookieParser(cookieSecret));
+  } else {
+    app.use(cookieParser());
+  }
 
-  // ── CORS ────────────────────────────────────────
-  const allowedOrigins = corsOrigin
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
+  // ── Security: Global CSRF Middleware ───────────────
+  app.use(csrfTokenMiddleware);
 
-  const isDev = config.get<string>("NODE_ENV", "development") !== "production";
+  // ── Security: Static File Serving (uploads) ─────────
+  // Note: In production, use S3/CloudFront instead
+  app.use("/uploads",
+    (req: any, res: any, next: any) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("X-Frame-Options", "DENY");
+      res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+      res.setHeader("Cache-Control", "private, max-age=3600");
+      next();
+    },
+    express.static(join(process.cwd(), "uploads"), {
+      maxAge: "1d",
+      etag: true,
+      immutable: true,
+      index: false,
+      fallthrough: false,
+    })
+  );
 
+  // ── Security: CORS (Strict whitelist) ─────────────
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      // Allow requests with no origin (mobile apps, curl, Swagger, etc.)
-      if (!origin) return callback(null, true);
-      // In development, allow ANY localhost origin (handles Vite port-hopping 8080/8081/8082/5173)
-      if (isDev && /^http:\/\/localhost:\d+$/.test(origin)) {
+      // Reject request with no origin in production
+      if (!origin) {
+        if (isProduction) {
+          return callback(new Error("Origin required"), false);
+        }
         return callback(null, true);
       }
-      // Allow if origin is in the explicit allowlist or is a Vercel preview deploy
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
-      ) {
+
+      // Check if origin is in whitelist
+      const isAllowed = corsOrigins.some((allowed) => {
+        // Exact match
+        if (allowed === origin) return true;
+        // Allow exact subdomain matches in production if configured
+        if (isProduction && origin.endsWith(".campuscareersmate.com")) return true;
+        // Allow localhost in development
+        if (isDevelopment && origin.match(/^http:\/\/localhost:\d+$/)) return true;
+        return false;
+      });
+
+      if (isAllowed) {
         return callback(null, true);
       }
-      callback(null, false);
+
+      logger.warn(`Blocked CORS request from origin: ${origin}`, "CORS");
+      callback(new Error("Origin not allowed"), false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Request-Id",
+      "X-Correlation-Id",
+    ],
+    exposedHeaders: ["X-Request-Id"],
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
   });
 
-  // ── Global Prefix & Versioning ──────────────────
-  app.setGlobalPrefix(prefix);
+  // ── API Versioning & Prefix ────────────────────────
+  app.setGlobalPrefix(`${prefix}/${config.get<string>("API_VERSION", "v1")}`);
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: "1",
   });
 
-  // ── Global Pipes ────────────────────────────────
+  // ── Global Pipes (Validation) ──────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: true, // Strip unknown properties
+      forbidNonWhitelisted: true, // Throw error on unknown properties
       transform: true,
-      transformOptions: { enableImplicitConversion: true },
+      transformOptions: {
+        enableImplicitConversion: false, // Be explicit about types
+      },
+      disableErrorMessages: isProduction, // Don't leak validation details
     }),
   );
 
-  // ── Global Filters & Interceptors ───────────────
+  // ── Global Filters & Interceptors ──────────────────
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(
     new LoggingInterceptor(),
     new TransformInterceptor(),
   );
 
-  // ── Swagger (dev only) ──────────────────────────
-  if (config.get("NODE_ENV") !== "production") {
+  // ── Swagger (Development Only with Auth) ───────────
+  if (isDevelopment) {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle("PlaceTrack API")
+      .setTitle("Campus Careers Mate API")
       .setDescription("Smart Placement Tracker — REST API Documentation")
       .setVersion("1.0")
-      .addBearerAuth()
+      .addBearerAuth(
+        {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Enter JWT Bearer token from Clerk",
+        },
+        "JWT"
+      )
+      .addSecurityRequirements("JWT")
       .addTag("auth", "Authentication & Authorization")
       .addTag("users", "User Management")
       .addTag("opportunities", "Placement Opportunities")
       .addTag("dashboard", "Dashboard & Analytics")
-      .addTag("notes", "Preparation Notes")
-      .addTag("health", "Health Checks")
+      .addTag("ai", "AI Features (Rate Limited)")
+      .addTag("documents", "Document Management")
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+    // Add security warning to swagger
+    document.info.description += "\n\n⚠️ **Security Notice:** AI endpoints are rate-limited to 10 requests/minute.";
+
     SwaggerModule.setup("docs", app, document, {
       swaggerOptions: {
         persistAuthorization: true,
+        tryItOutEnabled: false, // Disable execute in production
       },
+      customCss: ".swagger-ui .topbar { display: none }", // Hide swagger branding
     });
 
     logger.log(`📚 Swagger docs: http://localhost:${port}/docs`, "Bootstrap");
   }
 
-  // ── Start ───────────────────────────────────────
+  // ── Graceful Shutdown ──────────────────────────────
+  app.enableShutdownHooks();
+
+  // ── Start Server ──────────────────────────────────
   await app.listen(port);
+
   logger.log(
-    `🚀 PlaceTrack API running on http://localhost:${port}/${prefix}`,
+    `🚀 Campus Careers API running on http://localhost:${port}/${prefix}/v1`,
     "Bootstrap",
   );
   logger.log(`📋 Environment: ${config.get("NODE_ENV")}`, "Bootstrap");
+  logger.log(`🔒 Security headers: ${isProduction ? "enabled" : "development mode"}`, "Bootstrap");
 }
 
-bootstrap();
+// Global error handling for uncaught exceptions
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
 
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  process.exit(1);
+});
+
+bootstrap();

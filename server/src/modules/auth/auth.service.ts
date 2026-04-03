@@ -20,6 +20,7 @@ import * as bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { RedisService } from "../../common/redis/redis.service";
+import { PasswordSecurityService } from "./password-security.service";
 import { SignUpDto, SignInDto } from "./dto";
 import type { JwtPayload } from "./strategies/jwt.strategy";
 
@@ -54,6 +55,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
+    private readonly passwordSecurity: PasswordSecurityService,
   ) { }
 
   // ── Sign Up ────────────────────────────────────
@@ -68,6 +70,12 @@ export class AuthService {
       });
       if (existing) {
         throw new ConflictException("An account with this email already exists");
+      }
+
+      // Threat Intel: Check if password was breached globally
+      const isPwned = await this.passwordSecurity.isPasswordPwned(dto.password);
+      if (isPwned) {
+        throw new ConflictException("Password has been found in a data breach. Please choose a more secure password.");
       }
 
       // Hash password
