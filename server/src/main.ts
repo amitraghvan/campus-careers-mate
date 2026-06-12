@@ -136,11 +136,8 @@ async function bootstrap() {
   // ── Security: CORS (Strict whitelist) ─────────────
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      // Reject request with no origin in production
+      // Allow request with no origin (e.g. server-to-server health checks)
       if (!origin) {
-        if (isProduction) {
-          return callback(new Error("Origin required"), false);
-        }
         return callback(null, true);
       }
 
@@ -150,6 +147,8 @@ async function bootstrap() {
         if (allowed === origin) return true;
         // Allow exact subdomain matches in production if configured
         if (isProduction && origin.endsWith(".campuscareersmate.com")) return true;
+        // Allow Vercel deployments (previews and main branches)
+        if (origin.endsWith(".vercel.app") || origin.includes("vercel.app")) return true;
         // Allow localhost in development
         if (isDevelopment && origin.match(/^http:\/\/localhost:\d+$/)) return true;
         return false;
@@ -177,10 +176,12 @@ async function bootstrap() {
 
   // ── API Versioning & Prefix ────────────────────────
   app.setGlobalPrefix(prefix);
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: config.get<string>("API_VERSION", "v1").replace("v", ""),
-  });
+  if (!prefix.endsWith("/v1") && !prefix.endsWith("/v2")) {
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: config.get<string>("API_VERSION", "v1").replace("v", ""),
+    });
+  }
 
   // ── Global Pipes (Validation) ──────────────────────
   app.useGlobalPipes(
