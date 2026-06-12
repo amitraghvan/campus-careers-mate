@@ -28,11 +28,12 @@ export const envValidationSchema = Joi.object({
     .required(),
 
   // ── Database Configuration ─────────────────────
+  DATABASE_URL: Joi.string().required(),
   DB_HOST: Joi.string().hostname().default("localhost"),
   DB_PORT: Joi.number().port().default(5432),
-  DB_NAME: Joi.string().alphanum().min(1).required(),
-  DB_USER: Joi.string().min(1).required(),
-  DB_PASSWORD: Joi.string().min(8).required(),
+  DB_NAME: Joi.string().optional().default(""),
+  DB_USER: Joi.string().optional().default(""),
+  DB_PASSWORD: Joi.string().optional().default(""),
   DB_SSL_MODE: Joi.string().valid("disable", "require", "verify-full").default("require"),
   DB_POOL_MIN: Joi.number().min(1).max(100).default(5),
   DB_POOL_MAX: Joi.number().min(1).max(500).default(20),
@@ -93,7 +94,7 @@ export const envValidationSchema = Joi.object({
   CSP_REPORT_ONLY: Joi.boolean().default(false),
   HSTS_MAX_AGE: Joi.number().min(0).max(63072000).default(31536000),
 })
-  .unknown(false) // Reject unknown keys
+  .unknown(true) // Allow unknown keys (system env vars)
   .options({
     abortEarly: false, // Show all validation errors
     stripUnknown: { objects: true },

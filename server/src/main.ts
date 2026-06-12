@@ -176,10 +176,10 @@ async function bootstrap() {
   });
 
   // ── API Versioning & Prefix ────────────────────────
-  app.setGlobalPrefix(`${prefix}/${config.get<string>("API_VERSION", "v1")}`);
+  app.setGlobalPrefix(prefix);
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: "1",
+    defaultVersion: config.get<string>("API_VERSION", "v1").replace("v", ""),
   });
 
   // ── Global Pipes (Validation) ──────────────────────

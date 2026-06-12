@@ -6,6 +6,11 @@ import { ConfigService } from "@nestjs/config";
 import { AuthService } from "./auth.service";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { RedisService } from "../../common/redis/redis.service";
+import { PasswordSecurityService } from "./password-security.service";
+
+const mockPasswordSecurity = {
+    isPasswordPwned: jest.fn().mockResolvedValue(false),
+};
 
 // Mocks
 const mockPrisma = {
@@ -53,6 +58,7 @@ describe("AuthService - Missing Env Vars", () => {
                 { provide: RedisService, useValue: mockRedis },
                 { provide: JwtService, useValue: mockJwt },
                 { provide: ConfigService, useValue: mockConfigMissingSecret },
+                { provide: PasswordSecurityService, useValue: mockPasswordSecurity },
             ],
         }).compile();
 

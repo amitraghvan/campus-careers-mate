@@ -9,9 +9,13 @@ import { ConfigService } from "@nestjs/config";
 import { AuthService } from "./auth.service";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { RedisService } from "../../common/redis/redis.service";
+import { PasswordSecurityService } from "./password-security.service";
 import * as bcrypt from "bcrypt";
 
 // Mocks
+const mockPasswordSecurity = {
+  isPasswordPwned: jest.fn().mockResolvedValue(false),
+};
 const mockPrisma = {
   user: {
     findUnique: jest.fn(),
@@ -60,6 +64,7 @@ describe("AuthService", () => {
         { provide: RedisService, useValue: mockRedis },
         { provide: JwtService, useValue: mockJwt },
         { provide: ConfigService, useValue: mockConfig },
+        { provide: PasswordSecurityService, useValue: mockPasswordSecurity },
       ],
     }).compile();
 

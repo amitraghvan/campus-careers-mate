@@ -13,13 +13,13 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       // Proxy all /api requests to the NestJS backend in development
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3002",
         changeOrigin: true,
         secure: false,
       },
       // Also proxy /uploads (served by the backend's static middleware)
       "/uploads": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3002",
         changeOrigin: true,
         secure: false,
       },
