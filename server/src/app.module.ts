@@ -33,11 +33,6 @@ import { ResumeModule } from './modules/resume/resume.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env",
-      validationSchema: envValidationSchema,
-      validationOptions: {
-        allowUnknown: true,
-        abortEarly: true,
-      },
     }),
 
     // ── Rate Limiting ─────────────────────────────
