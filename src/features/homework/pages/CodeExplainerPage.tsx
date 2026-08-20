@@ -123,7 +123,7 @@ export default function CodeExplainerPage() {
             if (line.startsWith('```') || line.startsWith('    ')) {
                 return (
                     <code key={i} className="block text-xs font-mono bg-black/40 px-3 py-1 rounded-md text-cyan-300 my-1">
-                        {line.replace(/^    /, '')}
+                        {line.replace(/^ {4}/, '')}
                     </code>
                 );
             }

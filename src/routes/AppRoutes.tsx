@@ -38,6 +38,18 @@ const MockExamPage       = lazy(() => import("@/features/exam/pages/MockExamPage
 const StudyPlannerPage   = lazy(() => import("@/features/study-planner/pages/StudyPlannerPage"));
 const LearningAnalyticsPage = lazy(() => import("@/features/analytics/pages/LearningAnalyticsPage"));
 
+// ── Python Learning (Unit I: Python Foundations) ───────────────────────────
+const PythonDashboardPage  = lazy(() => import("@/features/python/pages/PythonDashboardPage"));
+const PythonPhasePage      = lazy(() => import("@/features/python/pages/PythonPhasePage"));
+const PythonChapterPage    = lazy(() => import("@/features/python/pages/PythonChapterPage"));
+const PythonLessonPage     = lazy(() => import("@/features/python/pages/PythonLessonPage"));
+const PythonPracticePage   = lazy(() => import("@/features/python/pages/PythonPracticePage"));
+const PythonQuizPage       = lazy(() => import("@/features/python/pages/PythonQuizPage"));
+const PythonAssessmentPage = lazy(() => import("@/features/python/pages/PythonAssessmentPage"));
+const PythonProjectPage    = lazy(() => import("@/features/python/pages/PythonProjectPage"));
+const PythonRevisionPage   = lazy(() => import("@/features/python/pages/PythonRevisionPage"));
+const PythonExamModePage   = lazy(() => import("@/features/python/pages/PythonExamModePage"));
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -65,6 +77,19 @@ export function AppRoutes() {
         >
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/explore" element={<ExplorePage />} />
+
+          {/* ── Python Learning (Unit I & Unit II) ── */}
+          <Route path="/python" element={<PythonDashboardPage />} />
+          <Route path="/python/phase/:phaseId" element={<PythonPhasePage />} />
+          <Route path="/python/phase/:phaseId/chapter/:chapterId" element={<PythonChapterPage />} />
+          <Route path="/python/phase/:phaseId/chapter/:chapterId/lesson/:lessonId" element={<PythonLessonPage />} />
+          <Route path="/python/phase/:phaseId/chapter/:chapterId/practice" element={<PythonPracticePage />} />
+          <Route path="/python/phase/:phaseId/chapter/:chapterId/quiz" element={<PythonQuizPage />} />
+          <Route path="/python/phase/:phaseId/assessment" element={<PythonAssessmentPage />} />
+          <Route path="/python/phase/:phaseId/project" element={<PythonProjectPage />} />
+          <Route path="/python/phase/:phaseId/project/:projectId" element={<PythonProjectPage />} />
+          <Route path="/python/phase/:phaseId/revision" element={<PythonRevisionPage />} />
+          <Route path="/python/phase/:phaseId/exam-mode" element={<PythonExamModePage />} />
 
           {/* ── Network Hub — nested layout with sub-nav ── */}
           <Route path="/network" element={<NetworkLayout />}>

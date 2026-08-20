@@ -9,5 +9,11 @@ secrets/
 !.env.example
 !.env.template
 node_modules
+dist
+dist-ssr
+server/dist
+server/uploads
+.DS_Store
+*.log
 .agent
 agent.py

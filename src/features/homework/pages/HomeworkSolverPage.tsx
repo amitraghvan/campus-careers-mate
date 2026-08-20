@@ -137,7 +137,7 @@ export default function HomeworkSolverPage() {
             if (line.startsWith('```') || line.startsWith('    ')) {
                 return (
                     <code key={i} className="block text-xs font-mono bg-black/30 px-3 py-0.5 rounded text-cyan-300">
-                        {line.replace(/^    /, '')}
+                        {line.replace(/^ {4}/, '')}
                     </code>
                 );
             }

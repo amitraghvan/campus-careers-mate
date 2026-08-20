@@ -29,6 +29,7 @@ import {
     BookOpen,
     Zap,
     Flame,
+    Code2,
 } from "lucide-react";
 import { UserButton, useUser, useClerk } from "@clerk/clerk-react";
 import { APP_CONFIG } from "@/config";
@@ -42,6 +43,7 @@ const PEER_AI_MATCHES = 3;
 
 const NAV_ITEMS = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/python", icon: Code2, label: "Python Learning", badge: "Unit I" },
     { to: "/explore", icon: Globe, label: "Explore" },
     { to: "/network", icon: Users, label: "Peer Connect", special: true },
     { to: "/pipeline", icon: Mail, label: "Cold Email" },
@@ -123,7 +125,8 @@ export default function DashboardLayout() {
                         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
                             {NAV_ITEMS.map((item) => {
                                 const isActive = location.pathname === item.to ||
-                                    (item.to === "/network" && location.pathname.startsWith("/network"));
+                                    (item.to === "/network" && location.pathname.startsWith("/network")) ||
+                                    (item.to === "/python" && location.pathname.startsWith("/python"));
                                 const isSpecial = 'special' in item && item.special;
 
                                 return (
